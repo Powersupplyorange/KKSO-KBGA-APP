@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Maintenance Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+  :root{
+    --primary:#4f46e5;
+    --primary-dark:#3730a3;
+    --secondary:#06b6d4;
+    --success:#10b981;
+    --success-dark:#059669;
+    --danger:#ef4444;
+    --danger-dark:#dc2626;
+    --warning:#f59e0b;
+    --bg:#eef1f8;
+    --card-bg:#ffffff;
+    --text-main:#1e293b;
+    --text-muted:#64748b;
+    --border:#e2e8f0;
+    --radius:16px;
+    --radius-sm:10px;
+    --shadow-sm:0 1px 4px rgba(15,23,42,0.06);
+    --shadow-md:0 6px 18px rgba(15,23,42,0.08);
+    --shadow-lg:0 14px 34px rgba(15,23,42,0.14);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    font-family:'Poppins', sans-serif;
+    background:var(--bg);
+    margin:0;
+    color:var(--text-main);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ===== Sticky App Header ===== */
+  .appHeader{
+    position:sticky; top:0; z-index:200;
+    background:linear-gradient(135deg, var(--primary), var(--secondary));
+    box-shadow:var(--shadow-md);
+    padding:12px 16px;
+  }
+  .appHeaderInner{
+    max-width:480px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .appTitle{ color:#fff; font-weight:700; font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+  .lockToggleWrap{ display:flex; align-items:center; gap:8px; }
+  .lockLabel{ color:#fff; font-size:0.78rem; font-weight:600; white-space:nowrap; }
+
+  .switch{ position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
+    background-color:rgba(255,255,255,0.35);
+    transition:.3s; border-radius:34px;
+  }
+  .slider:before{
+    position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px;
+    background-color:#fff; transition:.3s; border-radius:50%;
+    box-shadow:0 2px 5px rgba(0,0,0,0.25);
+  }
+  input:checked + .slider{ background-color:#10b981; }
+  input:checked + .slider:before{ transform:translateX(22px); }
+
+  .sessionChip{
+    max-width:480px; margin:8px auto 0; padding:0 16px;
+    display:flex; justify-content:flex-end;
+  }
+  .sessionBadge{
+    background:rgba(255,255,255,0.25); color:#fff; font-size:0.72rem; font-weight:600;
+    padding:3px 10px; border-radius:20px; backdrop-filter: blur(4px);
+  }
+
+  /* ===== Page Container ===== */
+  .page{
+    max-width:480px;
+    margin:0 auto;
+    background:transparent;
+    min-height:calc(100vh - 60px);
+    padding:18px 16px 50px;
+    animation: fadeIn .35s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .page:not(.active){ display:none; }
+
+  h1{ font-size:1.3rem; color:var(--primary-dark); text-align:center; margin:4px 0 16px; font-weight:800; }
+
+  /* ===== Section Cards ===== */
+  .section{
+    margin-bottom:18px;
+    padding:18px;
+    border-radius:var(--radius);
+    background:var(--card-bg);
+    box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);
+    transition: box-shadow .25s ease;
+  }
+  .section:hover{ box-shadow:var(--shadow-md); }
+  .section > label.title{
+    font-weight:700; display:flex; align-items:center; gap:8px;
+    margin-bottom:12px; color:var(--primary-dark); font-size:1rem;
+  }
+  label.sub{ font-weight:600; display:block; margin:12px 0 6px; color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:.3px; }
+
+  .divider{
+    text-align:center; color:#a3adc2; margin:14px 0; font-weight:700;
+    font-size:0.72rem; letter-spacing:1.5px; position:relative;
+  }
+  .divider::before, .divider::after{
+    content:""; position:absolute; top:50%; width:38%; height:1px; background:var(--border);
+  }
+  .divider::before{ left:0; } .divider::after{ right:0; }
+
+  /* ===== Buttons ===== */
+  button{
+    cursor:pointer; border:none; border-radius:var(--radius-sm);
+    padding:13px 18px; font-size:0.95rem; font-weight:600;
+    font-family:inherit; transition:all .2s ease;
+  }
+  button:active{ transform:scale(0.97); }
+  button:disabled{ opacity:0.55; cursor:not-allowed; transform:none !important; }
+
+  #btnScanQr{
+    background:linear-gradient(135deg,#00b09b,#00897b);
+    color:#fff; width:100%; box-shadow:0 4px 14px rgba(0,137,123,0.35);
+  }
+  #btnScanQr:hover{ box-shadow:0 6px 20px rgba(0,137,123,0.45); transform:translateY(-1px); }
+
+  #btnGetFormById, #btnGetFormByDropdown{
+    background:linear-gradient(135deg, var(--primary), #6366f1);
+    color:#fff; white-space:nowrap; box-shadow:0 4px 14px rgba(79,70,229,0.35);
+  }
+  #btnGetFormById:hover, #btnGetFormByDropdown:hover{ box-shadow:0 6px 20px rgba(79,70,229,0.45); transform:translateY(-1px); }
+
+  #btnAddStaff, #btnAddRemark{
+    background:linear-gradient(135deg, var(--success), var(--success-dark));
+    color:#fff; box-shadow:0 4px 12px rgba(16,185,129,0.3);
+  }
+  #btnAddStaff:hover, #btnAddRemark:hover{ box-shadow:0 6px 18px rgba(16,185,129,0.4); transform:translateY(-1px); }
+
+  .submitBtn{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+    color:#fff; width:100%; padding:16px; font-size:1.08rem; margin-top:14px;
+    box-shadow:0 6px 18px rgba(239,68,68,0.4); letter-spacing:.3px;
+  }
+  .submitBtn:hover{ box-shadow:0 8px 24px rgba(239,68,68,0.5); transform:translateY(-1px); }
+
+  .backBtn{
+    background:#fff; color:var(--text-muted); width:100%; padding:13px; margin-top:10px;
+    border:1.5px solid var(--border);
+  }
+  .backBtn:hover{ background:#f8fafc; border-color:#cbd5e1; }
+
+  .clearFieldsBtn{
+    background:#fff7ed; color:#b45309; border:1.5px solid #fdba74;
+    padding:8px 14px; font-size:0.82rem; font-weight:600; white-space:nowrap;
+  }
+  .clearFieldsBtn:hover{ background:#ffedd5; }
+
+  .row{ display:flex; gap:8px; }
+
+  /* ===== Inputs ===== */
+  input[type=text], input[type=date], select, textarea{
+    width:100%;
+    padding:12px 13px;
+    font-size:0.96rem;
+    font-family:inherit;
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);
+    margin-bottom:6px;
+    background:#fbfcfe;
+    color:var(--text-main);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  input[type=text]:focus, input[type=date]:focus, select:focus, textarea:focus{
+    outline:none; border-color:var(--primary); background:#fff;
+    box-shadow:0 0 0 3px rgba(79,70,229,0.15);
+  }
+  select:disabled{ background:#f1f5f9; color:#94a3b8; cursor:not-allowed; }
+  input.invalid, select.invalid, textarea.invalid{
+    border-color:var(--danger) !important;
+    background:#fff1f1 !important;
+    box-shadow:0 0 0 3px rgba(239,68,68,0.12) !important;
+  }
+  #assetIdInput{ flex:1; }
+
+  .error{ color:var(--danger); font-size:0.82rem; margin-top:2px; min-height:16px; font-weight:500; }
+
+  /* ===== Info box ===== */
+  .infoBox{
+    background:linear-gradient(135deg,#eef2ff,#e0f2fe);
+    padding:16px; border-radius:var(--radius);
+    margin-bottom:14px; border:1px solid #dbeafe;
+  }
+  .infoRow{ display:flex; justify-content:space-between; padding:4px 0; font-size:0.9rem; gap:8px; }
+  .infoRow span.k{ color:var(--text-muted); font-weight:500; }
+  .infoRow span.v{ font-weight:700; text-align:right; color:var(--primary-dark); }
+
+  hr.sep{ border:none; border-top:2px dashed #cbd5e1; margin:16px 0; }
+
+  /* ===== Lock Banner (shared: entry + form) ===== */
+  .lockBanner{
+    display:none;
+    background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+    border:1.5px solid #6ee7b7;
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    margin-bottom:16px;
+    font-size:0.85rem;
+    color:#065f46;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .lockBanner.show{ display:flex; }
+  .lockBanner b{ display:block; margin-bottom:2px; }
+  .lockBanner span{ line-height:1.4; }
+
+  /* ===== Form Groups ===== */
+  .formGroup{ margin-bottom:22px; }
+  .formGroup > label{ font-weight:700; display:block; margin-bottom:9px; color:var(--primary-dark); font-size:0.95rem; }
+  .fieldErr{ color:var(--danger); font-size:0.78rem; margin-top:-2px; margin-bottom:6px; min-height:14px; font-weight:500; }
+
+  .staffRow, .remarkRow{ display:flex; gap:8px; align-items:flex-start; margin-bottom:9px; }
+  .staffRow select{ flex:1; margin-bottom:0; }
+
+  .remarkRow textarea{
+    flex:1; resize:vertical; font-size:1rem; line-height:1.5; font-family:inherit;
+  }
+  .remarkText.readonlyRemark{
+    background:#eef2f7; color:#334155; cursor:not-allowed; min-height:56px; font-weight:600;
+    border-style:dashed;
+  }
+  .remarkText.addedRemark{
+    min-height:150px; font-size:1.05rem; font-weight:600; color:#111;
+  }
+
+  .delBtn{
+    background:linear-gradient(135deg,#f87171,#ef4444);
+    color:#fff; padding:11px 14px; font-size:1.05rem;
+    align-self:flex-start; line-height:1;
+    box-shadow:0 3px 10px rgba(239,68,68,0.3);
+  }
+  .delBtn:hover{ box-shadow:0 5px 14px rgba(239,68,68,0.4); }
+
+  #submitStatus{
+    text-align:center; margin-top:14px; font-weight:700; min-height:24px;
+    padding:10px; border-radius:var(--radius-sm); font-size:0.92rem;
+  }
+  #submitStatus.ok{ background:#dcfce7; color:#166534; }
+  #submitStatus.err{ background:#fee2e2; color:#991b1b; }
+  #submitStatus.loading{ background:#e0f2fe; color:#075985; }
+
+  /* ===== QR ===== */
+  #qrReaderContainer{ margin-top:12px; text-align:center; }
+  #qrVideo{ width:100%; border-radius:var(--radius-sm); background:#000; box-shadow:var(--shadow-md); }
+  #btnCancelScan{ margin-top:10px; background:#f1f5f9; color:var(--text-muted); width:100%; border:1.5px solid var(--border); }
+  #btnCancelScan:hover{ background:#e2e8f0; }
+  #qrResult{ text-align:center; font-size:0.85rem; color:#00695c; margin-top:8px; font-weight:600; }
+  #qrHint{ text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- STICKY HEADER (LOCK TOGGLE) -->
+<!-- ============================================================ -->
+<div class="appHeader">
+  <div class="appHeaderInner">
+    <div class="appTitle">🛠️ Maintenance Manager</div>
+    <div class="lockToggleWrap">
+      <span class="lockLabel" id="lockLabelText">🔓 Unlocked</span>
+      <label class="switch">
+        <input type="checkbox" id="lockToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+</div>
+<div class="sessionChip" id="sessionChipWrap" style="display:none;">
+  <span class="sessionBadge" id="sessionBadge">✅ 0 entries submitted</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 1: MAINTENANCE ENTRY PAGE -->
+<!-- ============================================================ -->
+<div id="entryPage" class="page active">
+  <h1>Maintenance Entry Page</h1>
+
+  <div class="lockBanner" id="entryLockBanner">
+    <div>
+      <b>🔒 Lock Mode Active</b>
+      <span>Asset Id / Dropdown selections are retained (except QR) for faster repeat entry.</span>
+    </div>
+    <button type="button" class="clearFieldsBtn" id="btnClearEntrySelections">↺ Clear Selections</button>
+  </div>
+
+  <div class="section">
+    <label class="title">📷 By Scan QR Code</label>
+    <button id="btnScanQr" type="button">Scan QR</button>
+    <div id="qrReaderContainer" style="display:none;">
+      <video id="qrVideo" playsinline autoplay muted></video>
+      <canvas id="qrCanvas" style="display:none;"></canvas>
+      <button id="btnCancelScan" type="button">Cancel</button>
+    </div>
+    <div id="qrResult"></div>
+    <div id="qrError" class="error"></div>
+    <div id="qrHint">Camera requires HTTPS (or localhost) and permission access.</div>
+  </div>
+
+  <div class="divider">OR</div>
+
+  <div class="section">
+    <label class="title">🔢 By Asset Id</label>
+    <div class="row">
+      <input type="text" id="assetIdInput" maxlength="9" placeholder="Enter 9-digit Asset Id" inputmode="numeric">
+      <button id="btnGetFormById" type="button">Get Form</button>
+    </div>
+    <div id="assetIdError" class="error"></div>
+  </div>
+
+  <div class="divider">OR</div>
+
+  <div class="section">
+    <label class="title">📋 By Dropdown Selection</label>
+
+    <label class="sub">Station</label>
+    <select id="ddStation"><option value="">Select Station</option></select>
+
+    <label class="sub">Group</label>
+    <select id="ddGroup" disabled><option value="">Select Group</option></select>
+
+    <label class="sub">Sub-Group</label>
+    <select id="ddSubGroup" disabled><option value="">Select Sub-Group</option></select>
+
+    <label class="sub">Equipment Name</label>
+    <select id="ddEquipment" disabled><option value="">Select Equipment</option></select>
+
+    <button id="btnGetFormByDropdown" type="button" style="width:100%; margin-top:12px;">Get Form</button>
+    <div id="dropdownError" class="error"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 2: MAINTENANCE ENTRY FORM -->
+<!-- ============================================================ -->
+<div id="formPage" class="page">
+  <h1>Maintenance Entry Form</h1>
+
+  <div class="lockBanner" id="lockBanner">
+    <div>
+      <b id="lockBannerTitle">🔒 Lock Mode Active</b>
+      <span id="lockBannerText">Fields auto-filled from previous entry. Review & Submit.</span>
+    </div>
+    <button type="button" class="clearFieldsBtn" id="btnClearFields">↺ Clear Fields</button>
+  </div>
+
+  <div class="infoBox">
+    <div class="infoRow"><span class="k">Asset Id:</span><span class="v" id="infoAssetId">-</span></div>
+    <div class="infoRow"><span class="k">Station:</span><span class="v" id="infoStation">-</span></div>
+    <div class="infoRow"><span class="k">Group:</span><span class="v" id="infoGroup">-</span></div>
+    <div class="infoRow"><span class="k">Sub-Group:</span><span class="v" id="infoSubGroup">-</span></div>
+    <div class="infoRow"><span class="k">Equipment Name:</span><span class="v" id="infoEquipment">-</span></div>
+  </div>
+  <hr class="sep">
+
+  <div class="formGroup">
+    <label>Date Of Maintenance *</label>
+    <input type="date" id="dateOfMaintenance">
+    <div class="fieldErr" id="dateErr"></div>
+  </div>
+
+  <div class="formGroup">
+    <label>Type Of Maintenance *</label>
+    <select id="typeOfMaintenance">
+      <option value="">Select Type</option>
+      <option value="YEARLY">Yearly</option>
+      <option value="HALF-YEARLY">Half-yearly</option>
+      <option value="QUARTERLY">Quarterly</option>
+      <option value="MONTHLY">Monthly</option>
+      <option value="FORTNIGHTLY">Fortnightly</option>
+      <option value="WEEKLY">Weekly</option>
+    </select>
+    <div class="fieldErr" id="typeErr"></div>
+  </div>
+
+  <div class="formGroup">
+    <label>Attended By *</label>
+    <div id="attendedByContainer"></div>
+    <button id="btnAddStaff" type="button">+ Add More</button>
+    <div class="fieldErr" id="staffErr"></div>
+  </div>
+
+  <div class="formGroup">
+    <label>Remarks *</label>
+    <div id="remarksContainer"></div>
+    <button id="btnAddRemark" type="button">+ Add More</button>
+    <div class="fieldErr" id="remarksErr"></div>
+  </div>
+
+  <div id="formError" class="error" style="text-align:center;"></div>
+  <button id="btnSubmit" class="submitBtn" type="button">Submit</button>
+  <button id="btnBack" class="backBtn" type="button">← Back</button>
+  <div id="submitStatus"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  SHEET_ID: "136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
+  API_KEY: "AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI",
+  SHEET_NAME: "Maintenance_Log",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec"
+};
+
+/* ============================================================
+   MASTER DATA / MAPPING
+   ============================================================ */
+const stationMap = {
+  "200":"KKSO DEPOT", "201":"KKSO", "202":"KSJR", "203":"KJNN", "204":"KKSK",
+  "205":"KHMD", "206":"KVIB", "207":"KRWT", "208":"KBST", "209":"KBGA"
+};
+
+const groupMap = {
+  "01": "HT", "02": "LT", "03": "Pump", "04": "DG",
+  "05": "Third_rail", "06": "Lift_&_Escalator", "07": "Fire", "08": "Split_&_HVAC"
+};
+
+const subGroupMap = {
+  "01": {
+    "01":"33KV GIS SWITCHGEAR", "02":"RECTIFIER TRANSFORMER", "03":"DIODE RECTIFIER",
+    "04":"AUXILIARY TRANSFORMER", "05":"HSCB", "06":"BCP", "07":"MOTORISED ISOLATOR",
+    "08":"TRACK DISCONNECTOR", "09":"THIRD RAIL EARTHING", "10":"NEGATIVE RETURN PANEL",
+    "11":"OVPD", "12":"ETS", "13":"ACDB", "14":"DCDB", "15":"BATTERY CHARGER",
+    "16":"NI-CD BATTERY BANK"
+  },
+  "02": {}, "03": {}, "04": {}, "05": {}, "06": {}, "07": {}, "08": {}
+};
+
+const equipmentMap = {
+  "01": {
+    "01": {
+      "01":"HB01","02":"HB02","03":"HB03","04":"HB04","05":"HB05","06":"HB06",
+      "07":"HB07","08":"HB08","09":"HB09","10":"HB10","11":"HB11","12":"HB12",
+      "13":"HB13","14":"HB14","15":"HB15","16":"HB16","17":"HB17","18":"HB18",
+      "19":"HB19","20":"HB20","21":"BRP01","22":"BRP02"
+    },
+    "02": { "01":"TT01","02":"TT02","03":"TT03" },
+    "03": { "01":"SR01","02":"SR02","03":"SR03" },
+    "04": { "01":"AT01","02":"AT02","03":"AT03" },
+    "05": {
+      "01":"DB 01","02":"DB 02","03":"DB 03","04":"DB 04","05":"DB 05","06":"DB 06",
+      "07":"DB 07","08":"DB 08","09":"DB 09","10":"DB 10","11":"DB 11"
+    },
+    "06": { "01":"BCP01","02":"BCP02" },
+    "07": { "01":"IM 01","02":"IM 02","03":"IM 03","04":"IM 04","05":"IM 05","09":"IM 09","10":"IM 10" },
+    "08": {
+      "01":"TD 01","02":"TD 02","03":"TD 03","04":"TD 04","05":"TD 05","06":"TD 06",
+      "07":"TD 07","08":"TD 07A","09":"TD 07B","10":"TD 08","11":"TD 09A","12":"TD 09B",
+      "13":"TD 10A","14":"TD 10B","15":"TD 13","16":"TD 23","17":"TD 76","18":"TD 45"
+    },
+    "09": { "01":"TRE01","02":"TRE02" },
+    "10": { "01":"IM06","02":"IM07","03":"IM08" },
+    "11": { "01":"OVPD01" },
+    "12": {
+      "01":"ETS01","02":"ETS01A","03":"ETS02","04":"ETS02A","05":"ETS03","06":"ETS03A",
+      "07":"ETS04","08":"ETS04A","09":"ETS05","10":"ETS06","11":"ETS07","12":"ETS08",
+      "13":"ETS09","14":"ETS10"
+    },
+    "13": { "01":"ACDB01","02":"ACDB02" },
+    "14": { "01":"DCDB01" },
+    "15": { "01":"BC01","02":"BC02","03":"BC03" },
+    "16": { "01":"BB01","02":"BB02" }
+  },
+  "02": {}, "03": {}, "04": {}, "05": {}, "06": {}, "07": {}, "08": {}
+};
+
+const validAssetIdsByGroup = {
+  "01": new Set([
+"200010101","200010102","200010103","200010104","200010105","200010106","200010107","200010108","200010109","200010110","200010111","200010121",
+"201010101","201010102","201010103","201010104","201010105","201010106","201010107","201010108","201010109","201010110","201010111","201010112","201010113","201010114","201010121","201010122",
+"202010101","202010102","202010103","202010104","202010105","202010106","202010107","202010108","202010109","202010110","202010111","202010112","202010113","202010114","202010115","202010116","202010117","202010118","202010119","202010120","202010121","202010122",
+"203010101","203010102","203010103","203010104","203010105","203010106","203010107","203010108","203010109","203010110","203010111","203010121",
+"204010101","204010102","204010103","204010104","204010105","204010106","204010107","204010108","204010109","204010110","204010111","204010121",
+"205010101","205010102","205010103","205010104","205010105","205010106","205010107","205010108","205010109","205010110","205010111","205010112","205010113","205010114","205010115","205010116","205010117","205010118","205010119","205010120","205010121","205010122",
+"206010101","206010102","206010103","206010104","206010105","206010106","206010107","206010108","206010109","206010110","206010111","206010121",
+"207010101","207010102","207010103","207010104","207010105","207010106","207010107","207010108","207010109","207010110","207010111","207010121",
+"208010101","208010102","208010103","208010104","208010105","208010106","208010107","208010108","208010109","208010110","208010111","208010121",
+"209010101","209010102","209010103","209010104","209010105","209010106","209010107","209010108","209010109","209010110","209010111","209010121",
+"200010201","200010202",
+"201010201","201010202","201010203",
+"202010201","202010202",
+"203010201","203010202",
+"204010201","204010202",
+"205010201","205010202",
+"206010201","206010202",
+"207010201","207010202",
+"208010201","208010202",
+"209010201","209010202",
+"200010301","200010302",
+"201010301","201010302","201010303",
+"202010301","202010302",
+"203010301","203010302",
+"204010301","204010302",
+"205010301","205010302",
+"206010301","206010302",
+"207010301","207010302",
+"208010301","208010302",
+"209010301","209010302",
+"200010401","200010402","200010403",
+"201010401","201010402","201010403",
+"202010401","202010402",
+"203010401","203010402",
+"204010401","204010402",
+"205010401","205010402",
+"206010401","206010402",
+"207010401","207010402",
+"208010401","208010402",
+"209010401","209010402",
+"200010501","200010502","200010503","200010504","200010505","200010506","200010507","200010509","200010510","200010511",
+"201010501","201010502","201010503","201010505","201010506","201010507","201010508",
+"202010501","202010502","202010503","202010504","202010505","202010506","202010507",
+"203010501","203010502","203010503","203010504","203010505","203010506","203010507",
+"204010501","204010502","204010503","204010504","204010505","204010506","204010507",
+"205010501","205010502","205010503","205010504","205010505","205010506","205010507",
+"206010501","206010502","206010503","206010504","206010505","206010506","206010507",
+"207010501","207010502","207010503","207010504","207010505","207010506","207010507",
+"208010501","208010502","208010503","208010504","208010505","208010506","208010507",
+"209010501","209010502","209010503","209010504","209010505","209010506","209010507",
+"201010601",
+"202010601","202010602",
+"203010601","203010602",
+"204010601","204010602",
+"205010601","205010602",
+"206010601","206010602",
+"207010601","207010602",
+"208010601","208010602",
+"209010601","209010602",
+"200010701","200010702","200010703","200010704","200010705","200010709","200010710",
+"201010701","201010702","201010703",
+"202010701","202010702","202010703","202010704",
+"203010701","203010702","203010703","203010704",
+"204010701","204010702","204010703","204010704",
+"205010701","205010702","205010703","205010704",
+"206010701","206010702","206010703","206010704",
+"207010701","207010702","207010703","207010704",
+"208010701","208010702","208010703","208010704",
+"209010701","209010702","209010703","209010704",
+"200010801","200010802","200010803","200010804","200010805","200010806","200010807","200010808","200010809","200010810","200010811","200010812","200010813","200010814","200010815","200010816","200010817","200010818",
+"200010901","200010902",
+"201010901","201010902",
+"202010901","202010902",
+"203010901","203010902",
+"204010901","204010902",
+"205010901","205010902",
+"206010901","206010902",
+"207010901","207010902",
+"208010901","208010902",
+"209010901","209010902",
+"200011001","200011002",
+"201011001","201011002","201011003",
+"202011001","202011002",
+"203011001","203011002",
+"204011001","204011002",
+"205011001","205011002",
+"206011001","206011002",
+"207011001","207011002",
+"208011001","208011002",
+"209011001","209011002",
+"201011101",
+"202011101",
+"203011101",
+"204011101",
+"205011101",
+"206011101",
+"207011101",
+"208011101",
+"209011101",
+"200011201","200011203","200011205","200011206","200011207","200011209","200011210","200011211","200011212","200011213","200011214",
+"201011201","201011202","201011203","201011204","201011205","201011206","201011207","201011208","201011209","201011210","201011211",
+"202011201","202011203","202011205","202011207","202011209","202011210","202011211",
+"203011201","203011203","203011205","203011207","203011209","203011210","203011211",
+"204011201","204011203","204011205","204011207","204011209","204011210","204011211",
+"205011201","205011203","205011205","205011207","205011209","205011210","205011211",
+"206011201","206011203","206011205","206011207","206011209","206011210","206011211",
+"207011201","207011203","207011205","207011207","207011209","207011210","207011211",
+"208011201","208011203","208011205","208011207","208011209","208011210","208011211",
+"209011201","209011203","209011205","209011207","209011209","209011210","209011211",
+"200011301","200011302",
+"201011301",
+"202011301","202011302",
+"203011301",
+"204011301",
+"205011301","205011302",
+"206011301",
+"207011301",
+"208011301",
+"209011301",
+"200011401",
+"201011401",
+"202011401",
+"203011401",
+"204011401",
+"205011401",
+"206011401",
+"207011401",
+"208011401",
+"209011401",
+"200011501","200011502","200011503",
+"201011501","201011502","201011503",
+"202011501","202011502","202011503",
+"203011501","203011502","203011503",
+"204011501","204011502","204011503",
+"205011501","205011502","205011503",
+"206011501","206011502","206011503",
+"207011501","207011502","207011503",
+"208011501","208011502","208011503",
+"209011501","209011502","209011503",
+"200011601","200011602",
+"201011601","201011602",
+"202011601","202011602",
+"203011601","203011602",
+"204011601","204011602",
+"205011601","205011602",
+"206011601","206011602",
+"207011601","207011602",
+"208011601","208011602",
+"209011601","209011602"
+  ]),
+  "02": new Set(), "03": new Set(), "04": new Set(),
+  "05": new Set(), "06": new Set(), "07": new Set(), "08": new Set()
+};
+
+const staffList = [
+"NARENDRA EKKA-SSE","RAJA MANDAL-SSE","SUMESH KUMAR-JE","KISHOR KUMAR-JE","MD.AMIR ANSARI-JE",
+"ARPAN MONDAL-JE","RAVI KUMAR MALHOTRA-Tech-I","NITISH KUMAR-Tech-I","SAMBHU DAS-TECH-II",
+"SURAJ THAKUR-TECH-II","NITISH KUMAR CHOUDHARY-TECH-II","SUMAN KUMAR-TECH-II","SHIVAM KUMAR-HELPER",
+"SUMAN THAKUR-HELPER","SUBRATA DAS-HELPER","BIKESH SINGH-HELPER","RAUSHAN KUMAR JOSHI-HELPER",
+"ANIL SINGH-HELPER","AMAN BHADURIA-HELPER","SURAJ KUMAR-HELPER","SUMAN KRISHNA ROY-HELPER",
+"DHARMENDRA KUMAR-HELPER","RAVI RANJAN KUMAR-HELPER","MANISH KUMAR-HELPER"
+];
+
+/* ============================================================
+   HELPER FUNCTIONS
+   ============================================================ */
+function decodeAssetId(id) {
+  const stationCode = id.slice(0,3);
+  const groupCode = id.slice(3,5);
+  const subGroupCode = id.slice(5,7);
+  const equipCode = id.slice(7,9);
+  return {
+    stationCode, groupCode, subGroupCode, equipCode,
+    station: stationMap[stationCode] || "Unknown",
+    group: (groupMap[groupCode] || "Unknown").replace(/_/g," "),
+    subGroup: (subGroupMap[groupCode] && subGroupMap[groupCode][subGroupCode]) || "Unknown",
+    equipment: (equipmentMap[groupCode] && equipmentMap[groupCode][subGroupCode] &&
+                equipmentMap[groupCode][subGroupCode][equipCode]) || "Unknown"
+  };
+}
+
+function isValidAssetId(id) {
+  if (!/^\d{9}$/.test(id)) return false;
+  const groupCode = id.slice(3,5);
+  const set = validAssetIdsByGroup[groupCode];
+  return set ? set.has(id) : false;
+}
+
+function getValidSubGroupCodes(stationCode, groupCode) {
+  const set = validAssetIdsByGroup[groupCode] || new Set();
+  const prefix = stationCode + groupCode;
+  const result = new Set();
+  set.forEach(id => { if (id.startsWith(prefix)) result.add(id.slice(5,7)); });
+  return result;
+}
+
+function getValidEquipmentCodes(stationCode, groupCode, subGroupCode) {
+  const set = validAssetIdsByGroup[groupCode] || new Set();
+  const prefix = stationCode + groupCode + subGroupCode;
+  const result = new Set();
+  set.forEach(id => { if (id.startsWith(prefix)) result.add(id.slice(7,9)); });
+  return result;
+}
+
+function toDDMMYY(isoDate) {
+  const [y,m,d] = isoDate.split('-');
+  return `${d}-${m}-${y.slice(2)}`;
+}
+
+function markInvalid(el) { el.classList.add('invalid'); }
+function clearInvalid(el) { el.classList.remove('invalid'); }
+
+/* ============================================================
+   LOCK / MULTI-ENTRY STATE
+   ============================================================ */
+let lockMode = false;
+let savedFormState = null; // { date, type, staff:[], remarks:[] }
+let sessionSubmitCount = 0;
+
+const lockToggle = document.getElementById('lockToggle');
+const lockLabelText = document.getElementById('lockLabelText');
+const sessionChipWrap = document.getElementById('sessionChipWrap');
+const sessionBadge = document.getElementById('sessionBadge');
+const lockBanner = document.getElementById('lockBanner');
+const lockBannerTitle = document.getElementById('lockBannerTitle');
+const lockBannerText = document.getElementById('lockBannerText');
+const btnClearFields = document.getElementById('btnClearFields');
+const entryLockBanner = document.getElementById('entryLockBanner');
+const btnClearEntrySelections = document.getElementById('btnClearEntrySelections');
+
+function clearEntryPageSelections() {
+  assetIdInput.value = '';
+  assetIdError.textContent = '';
+  ddStation.value = ''; ddGroup.value = '';
+  ddGroup.disabled = true;
+  ddSubGroup.innerHTML = '<option value="">Select Sub-Group</option>';
+  ddSubGroup.disabled = true;
+  ddEquipment.innerHTML = '<option value="">Select Equipment</option>';
+  ddEquipment.disabled = true;
+  dropdownError.textContent = '';
+}
+
+function updateEntryLockBanner() {
+  entryLockBanner.classList.toggle('show', lockMode);
+}
+
+btnClearEntrySelections.addEventListener('click', clearEntryPageSelections);
+
+lockToggle.addEventListener('change', () => {
+  lockMode = lockToggle.checked;
+  if (!lockMode) {
+    savedFormState = null;
+    sessionSubmitCount = 0;
+    clearEntryPageSelections(); // reset entry page fields when unlocking
+  }
+  lockLabelText.textContent = lockMode ? '🔒 Locked' : '🔓 Unlocked';
+  sessionChipWrap.style.display = lockMode ? 'flex' : 'none';
+  updateSessionBadge();
+  updateEntryLockBanner();
+});
+
+function updateSessionBadge() {
+  sessionBadge.textContent = `✅ ${sessionSubmitCount} entries submitted`;
+}
+
+btnClearFields.addEventListener('click', () => {
+  savedFormState = null;
+  resetFormFields(true); // force blank fields, keep asset info
+});
+
+function captureFormState() {
+  return {
+    date: dateInput.value,
+    type: typeSelect.value,
+    staff: Array.from(document.querySelectorAll('.staffSelect')).map(s => s.value).filter(v => v),
+    remarks: Array.from(document.querySelectorAll('.remarkText')).map(t => t.value)
+  };
+}
+
+/* ============================================================
+   ENTRY PAGE LOGIC
+   ============================================================ */
+const ddStation = document.getElementById('ddStation');
+const ddGroup = document.getElementById('ddGroup');
+const ddSubGroup = document.getElementById('ddSubGroup');
+const ddEquipment = document.getElementById('ddEquipment');
+const dropdownError = document.getElementById('dropdownError');
+const assetIdInput = document.getElementById('assetIdInput');
+const assetIdError = document.getElementById('assetIdError');
+
+function populateStationDropdown() {
+  ddStation.innerHTML = '<option value="">Select Station</option>';
+  Object.entries(stationMap).forEach(([code,name]) => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.textContent = `${name} (${code})`;
+    ddStation.appendChild(opt);
+  });
+}
+
+function populateGroupDropdown() {
+  ddGroup.innerHTML = '<option value="">Select Group</option>';
+  Object.entries(groupMap).forEach(([code,name]) => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.textContent = name.replace(/_/g,' ');
+    ddGroup.appendChild(opt);
+  });
+}
+
+function populateSubGroupDropdown(stationCode, groupCode) {
+  ddSubGroup.innerHTML = '<option value="">Select Sub-Group</option>';
+  const allSubGroups = subGroupMap[groupCode] || {};
+  const validCodes = getValidSubGroupCodes(stationCode, groupCode);
+  const codes = Object.keys(allSubGroups).filter(c => validCodes.has(c));
+
+  if (codes.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = 'No data available for this Station/Group'; opt.disabled = true;
+    ddSubGroup.appendChild(opt);
+    return;
+  }
+  codes.forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.textContent = allSubGroups[code];
+    ddSubGroup.appendChild(opt);
+  });
+}
+
+function populateEquipmentDropdown(stationCode, groupCode, subGroupCode) {
+  ddEquipment.innerHTML = '<option value="">Select Equipment</option>';
+  const allEquip = (equipmentMap[groupCode] && equipmentMap[groupCode][subGroupCode]) || {};
+  const validCodes = getValidEquipmentCodes(stationCode, groupCode, subGroupCode);
+  const codes = Object.keys(allEquip).filter(c => validCodes.has(c));
+
+  if (codes.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = 'No data available'; opt.disabled = true;
+    ddEquipment.appendChild(opt);
+    return;
+  }
+  codes.forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.textContent = allEquip[code];
+    ddEquipment.appendChild(opt);
+  });
+}
+
+populateStationDropdown();
+populateGroupDropdown();
+
+ddStation.addEventListener('change', () => {
+  ddGroup.value = '';
+  ddSubGroup.innerHTML = '<option value="">Select Sub-Group</option>';
+  ddEquipment.innerHTML = '<option value="">Select Equipment</option>';
+  ddGroup.disabled = !ddStation.value;
+  ddSubGroup.disabled = true;
+  ddEquipment.disabled = true;
+  dropdownError.textContent = '';
+});
+
+ddGroup.addEventListener('change', () => {
+  ddSubGroup.innerHTML = '<option value="">Select Sub-Group</option>';
+  ddEquipment.innerHTML = '<option value="">Select Equipment</option>';
+  ddEquipment.disabled = true;
+
+  if (ddStation.value && ddGroup.value) {
+    populateSubGroupDropdown(ddStation.value, ddGroup.value);
+    ddSubGroup.disabled = false;
+  } else {
+    ddSubGroup.disabled = true;
+  }
+  dropdownError.textContent = '';
+});
+
+ddSubGroup.addEventListener('change', () => {
+  ddEquipment.innerHTML = '<option value="">Select Equipment</option>';
+  if (ddStation.value && ddGroup.value && ddSubGroup.value) {
+    populateEquipmentDropdown(ddStation.value, ddGroup.value, ddSubGroup.value);
+    ddEquipment.disabled = false;
+  } else {
+    ddEquipment.disabled = true;
+  }
+  dropdownError.textContent = '';
+});
+
+document.getElementById('btnGetFormByDropdown').addEventListener('click', () => {
+  const s = ddStation.value, g = ddGroup.value, sg = ddSubGroup.value, e = ddEquipment.value;
+  dropdownError.textContent = '';
+  if (!s || !g || !sg || !e) {
+    dropdownError.textContent = 'Please select all fields (Station, Group, Sub-Group, Equipment).';
+    return;
+  }
+  const assetId = s + g + sg + e;
+  if (!isValidAssetId(assetId)) {
+    dropdownError.textContent = 'Invalid combination. Asset Id not found in master list.';
+    return;
+  }
+  showForm(assetId);
+});
+
+/* --- Asset Id manual entry --- */
+assetIdInput.addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,9);
+  assetIdError.textContent = '';
+});
+
+document.getElementById('btnGetFormById').addEventListener('click', () => {
+  const id = assetIdInput.value.trim();
+  assetIdError.textContent = '';
+  if (!/^\d{9}$/.test(id)) {
+    assetIdError.textContent = 'Please enter a valid 9-digit Asset Id.';
+    return;
+  }
+  if (!isValidAssetId(id)) {
+    assetIdError.textContent = 'Asset Id not found in master list.';
+    return;
+  }
+  showForm(id);
+});
+
+/* --- QR Scan --- */
+const btnScanQr = document.getElementById('btnScanQr');
+const qrReaderContainer = document.getElementById('qrReaderContainer');
+const qrVideo = document.getElementById('qrVideo');
+const qrCanvas = document.getElementById('qrCanvas');
+const qrCtx = qrCanvas.getContext('2d');
+const qrResult = document.getElementById('qrResult');
+const qrError = document.getElementById('qrError');
+let qrStream = null;
+let qrScanning = false;
+
+btnScanQr.addEventListener('click', startQrScan);
+document.getElementById('btnCancelScan').addEventListener('click', stopQrScan);
+
+async function startQrScan() {
+  qrError.textContent = '';
+  qrResult.textContent = '';
+
+  if (!window.isSecureContext) {
+    qrError.textContent = 'Camera requires a secure connection (HTTPS or localhost). Please open this page via https://';
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    qrError.textContent = 'Camera API not supported in this browser.';
+    return;
+  }
+
+  const constraintsList = [
+    { video: { facingMode: { exact: "environment" } } },
+    { video: { facingMode: "environment" } },
+    { video: true }
+  ];
+
+  let lastErr = null;
+  qrStream = null;
+  for (const constraints of constraintsList) {
+    try {
+      qrStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (qrStream) break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (!qrStream) {
+    let msg = 'Camera access denied or not available.';
+    if (lastErr && lastErr.name) {
+      if (lastErr.name === 'NotAllowedError') msg = 'Camera permission denied. Please allow camera access in browser settings.';
+      else if (lastErr.name === 'NotFoundError') msg = 'No camera found on this device.';
+      else if (lastErr.name === 'NotReadableError') msg = 'Camera is already in use by another app.';
+      else msg = 'Camera error: ' + lastErr.name;
+    }
+    qrError.textContent = msg;
+    return;
+  }
+
+  qrVideo.srcObject = qrStream;
+  qrVideo.setAttribute('playsinline', 'true');
+  qrVideo.muted = true;
+
+  try {
+    await qrVideo.play();
+  } catch (err) {
+    qrError.textContent = 'Unable to start camera preview. Please try again.';
+    stopQrScan();
+    return;
+  }
+
+  qrReaderContainer.style.display = 'block';
+  qrScanning = true;
+  requestAnimationFrame(scanLoop);
+}
+
+function stopQrScan() {
+  qrScanning = false;
+  if (qrStream) {
+    qrStream.getTracks().forEach(t => t.stop());
+    qrStream = null;
+  }
+  qrReaderContainer.style.display = 'none';
+}
+
+function scanLoop() {
+  if (!qrScanning) return;
+  if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+    qrCanvas.width = qrVideo.videoWidth;
+    qrCanvas.height = qrVideo.videoHeight;
+    qrCtx.drawImage(qrVideo, 0, 0, qrCanvas.width, qrCanvas.height);
+    const imageData = qrCtx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if (code && code.data) {
+      handleQrResult(code.data);
+      return;
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+function handleQrResult(text) {
+  const digitsOnly = text.replace(/\D/g, '');
+  const assetId = digitsOnly.slice(-9);
+  stopQrScan();
+  if (!/^\d{9}$/.test(assetId) || !isValidAssetId(assetId)) {
+    qrError.textContent = 'Scanned QR does not contain a valid Asset Id.';
+    return;
+  }
+  qrResult.textContent = 'QR scanned successfully!';
+  showForm(assetId);
+}
+
+/* ============================================================
+   FORM PAGE LOGIC
+   ============================================================ */
+const entryPage = document.getElementById('entryPage');
+const formPage = document.getElementById('formPage');
+let currentAssetId = null;
+let currentDecoded = null;
+
+function showForm(assetId) {
+  currentAssetId = assetId;
+  currentDecoded = decodeAssetId(assetId);
+
+  document.getElementById('infoAssetId').textContent = assetId;
+  document.getElementById('infoStation').textContent = currentDecoded.station;
+  document.getElementById('infoGroup').textContent = currentDecoded.group;
+  document.getElementById('infoSubGroup').textContent = currentDecoded.subGroup;
+  document.getElementById('infoEquipment').textContent = currentDecoded.equipment;
+
+  resetFormFields();
+  updateLockBanner();
+
+  entryPage.classList.remove('active');
+  formPage.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showEntry() {
+  formPage.classList.remove('active');
+  entryPage.classList.add('active');
+
+  // QR result/error ALWAYS reset — fresh scan required every time, regardless of lock
+  qrResult.textContent = '';
+  qrError.textContent = '';
+
+  if (!lockMode) {
+    // Unlocked: full clear of Entry Page fields (old behavior)
+    clearEntryPageSelections();
+  } else {
+    // Locked: KEEP Asset Id input & Dropdown selections; just clear transient error text
+    assetIdError.textContent = '';
+    dropdownError.textContent = '';
+  }
+
+  updateEntryLockBanner();
+
+  document.getElementById('submitStatus').textContent = '';
+  document.getElementById('submitStatus').className = '';
+  window.scrollTo(0,0);
+}
+
+document.getElementById('btnBack').addEventListener('click', showEntry);
+
+function updateLockBanner() {
+  if (lockMode) {
+    lockBanner.classList.add('show');
+    if (savedFormState) {
+      lockBannerTitle.textContent = '🔒 Lock Mode Active';
+      lockBannerText.textContent = 'Fields auto-filled from previous entry. Review & Submit.';
+    } else {
+      lockBannerTitle.textContent = '🔒 Lock Mode Active';
+      lockBannerText.textContent = 'This is your first entry — future scans will retain these values.';
+    }
+  } else {
+    lockBanner.classList.remove('show');
+  }
+}
+
+/* --- Date / Type --- */
+const dateInput = document.getElementById('dateOfMaintenance');
+const typeSelect = document.getElementById('typeOfMaintenance');
+const dateErr = document.getElementById('dateErr');
+const typeErr = document.getElementById('typeErr');
+
+dateInput.addEventListener('change', () => { clearInvalid(dateInput); dateErr.textContent=''; });
+typeSelect.addEventListener('change', () => {
+  clearInvalid(typeSelect); typeErr.textContent='';
+  const firstRemark = document.querySelector('.remarkText');
+  if (firstRemark && typeSelect.value) {
+    firstRemark.value = `${typeSelect.value} MAINTENANCE DONE`;
+    clearInvalid(firstRemark);
+    document.getElementById('remarksErr').textContent = '';
+  }
+});
+
+/* --- Attended By (dynamic, no repeat) --- */
+const attendedByContainer = document.getElementById('attendedByContainer');
+const staffErr = document.getElementById('staffErr');
+
+function getSelectedStaffValues() {
+  return Array.from(document.querySelectorAll('.staffSelect')).map(s => s.value).filter(v => v);
+}
+
+function renderStaffOptions(select) {
+  const currentVal = select.value;
+  const used = getSelectedStaffValues();
+  select.innerHTML = '<option value="">Select Staff</option>';
+  staffList.forEach(name => {
+    if (used.includes(name) && name !== currentVal) return;
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    if (name === currentVal) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function refreshAllStaffOptions() {
+  document.querySelectorAll('.staffSelect').forEach(renderStaffOptions);
+}
+
+function updateStaffDeleteVisibility() {
+  const rows = document.querySelectorAll('.staffRow');
+  rows.forEach(r => {
+    const btn = r.querySelector('.delBtn');
+    btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+  });
+}
+
+function addStaffRow(presetValue) {
+  const row = document.createElement('div');
+  row.className = 'staffRow';
+
+  const select = document.createElement('select');
+  select.className = 'staffSelect';
+  select.addEventListener('change', () => {
+    clearInvalid(select);
+    staffErr.textContent = '';
+    refreshAllStaffOptions();
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'delBtn';
+  delBtn.textContent = '🗑';
+  delBtn.setAttribute('aria-label', 'Delete');
+  delBtn.title = 'Delete';
+  delBtn.addEventListener('click', () => {
+    row.remove();
+    refreshAllStaffOptions();
+    updateStaffDeleteVisibility();
+  });
+
+  row.appendChild(select);
+  row.appendChild(delBtn);
+  attendedByContainer.appendChild(row);
+
+  renderStaffOptions(select);
+  if (presetValue) {
+    select.value = presetValue;
+  }
+  updateStaffDeleteVisibility();
+}
+
+document.getElementById('btnAddStaff').addEventListener('click', () => addStaffRow());
+
+/* --- Remarks (max 2 boxes: readonly auto + 1 editable) --- */
+const remarksContainer = document.getElementById('remarksContainer');
+const btnAddRemark = document.getElementById('btnAddRemark');
+const remarksErr = document.getElementById('remarksErr');
+
+function addRemarkRow(prefill = '', readonly = false) {
+  const rows = document.querySelectorAll('.remarkRow');
+  if (rows.length >= 2) return;
+
+  const row = document.createElement('div');
+  row.className = 'remarkRow';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'remarkText';
+  textarea.value = prefill;
+
+  if (readonly) {
+    textarea.readOnly = true;
+    textarea.rows = 3;
+    textarea.classList.add('readonlyRemark');
+  } else {
+    textarea.rows = 7;
+    textarea.classList.add('addedRemark');
+    textarea.addEventListener('input', () => {
+      clearInvalid(textarea);
+      remarksErr.textContent = '';
+    });
+  }
+  row.appendChild(textarea);
+
+  if (rows.length >= 1) {
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'delBtn';
+    delBtn.textContent = '🗑';
+    delBtn.setAttribute('aria-label', 'Delete');
+    delBtn.title = 'Delete';
+    delBtn.addEventListener('click', () => {
+      row.remove();
+      updateRemarkAddVisibility();
+    });
+    row.appendChild(delBtn);
+  }
+
+  remarksContainer.appendChild(row);
+  updateRemarkAddVisibility();
+}
+
+function updateRemarkAddVisibility() {
+  const rows = document.querySelectorAll('.remarkRow');
+  btnAddRemark.style.display = rows.length >= 2 ? 'none' : 'inline-block';
+}
+
+btnAddRemark.addEventListener('click', () => addRemarkRow(''));
+
+/* --- Reset / Restore form fields when opening form --- */
+function resetFormFields(forceBlank) {
+  dateErr.textContent = ''; typeErr.textContent = ''; staffErr.textContent = ''; remarksErr.textContent = '';
+  clearInvalid(dateInput); clearInvalid(typeSelect);
+
+  const useSaved = !forceBlank && lockMode && savedFormState;
+
+  if (useSaved) {
+    dateInput.value = savedFormState.date || '';
+    typeSelect.value = savedFormState.type || '';
+
+    attendedByContainer.innerHTML = '';
+    if (savedFormState.staff.length === 0) {
+      addStaffRow();
+    } else {
+      savedFormState.staff.forEach(name => addStaffRow(name));
+    }
+
+    remarksContainer.innerHTML = '';
+    if (savedFormState.remarks.length === 0) {
+      addRemarkRow('', true);
+    } else {
+      savedFormState.remarks.forEach((text, idx) => addRemarkRow(text, idx === 0));
+    }
+  } else {
+    dateInput.value = '';
+    typeSelect.value = '';
+
+    attendedByContainer.innerHTML = '';
+    addStaffRow();
+
+    remarksContainer.innerHTML = '';
+    addRemarkRow('', true);
+  }
+
+  document.getElementById('formError').textContent = '';
+  document.getElementById('submitStatus').textContent = '';
+  document.getElementById('submitStatus').className = '';
+}
+
+/* ============================================================
+   SUBMIT with full validation
+   ============================================================ */
+document.getElementById('btnSubmit').addEventListener('click', async () => {
+  const formError = document.getElementById('formError');
+  const submitStatus = document.getElementById('submitStatus');
+  formError.textContent = '';
+  submitStatus.textContent = '';
+  submitStatus.className = '';
+  dateErr.textContent = ''; typeErr.textContent = ''; staffErr.textContent = ''; remarksErr.textContent = '';
+  clearInvalid(dateInput); clearInvalid(typeSelect);
+
+  let hasError = false;
+
+  if (!dateInput.value) {
+    dateErr.textContent = 'Date Of Maintenance is required.';
+    markInvalid(dateInput);
+    hasError = true;
+  }
+
+  if (!typeSelect.value) {
+    typeErr.textContent = 'Type Of Maintenance is required.';
+    markInvalid(typeSelect);
+    hasError = true;
+  }
+
+  const staffSelects = Array.from(document.querySelectorAll('.staffSelect'));
+  let staffBlank = false;
+  staffSelects.forEach(s => {
+    if (!s.value) { markInvalid(s); staffBlank = true; }
+    else clearInvalid(s);
+  });
+  if (staffSelects.length === 0 || staffBlank) {
+    staffErr.textContent = 'Attended By: at least one staff required and no box can be left blank.';
+    hasError = true;
+  }
+
+  const remarkTextareas = Array.from(document.querySelectorAll('.remarkText'));
+  let remarkBlank = false;
+  remarkTextareas.forEach(t => {
+    if (!t.value.trim()) { markInvalid(t); remarkBlank = true; }
+    else clearInvalid(t);
+  });
+  if (remarkTextareas.length === 0 || remarkBlank) {
+    remarksErr.textContent = 'Remarks cannot be blank.';
+    hasError = true;
+  }
+
+  if (hasError) {
+    formError.textContent = 'Please fix the highlighted fields before submitting.';
+    return;
+  }
+
+  const attendedBy = staffSelects.map(s => s.value);
+  const remarks = remarkTextareas.map(t => t.value.trim());
+
+  const payload = {
+    sheetName: CONFIG.SHEET_NAME,
+    assetId: currentAssetId,
+    station: currentDecoded.station,
+    group: currentDecoded.group,
+    subGroup: currentDecoded.subGroup,
+    equipmentName: currentDecoded.equipment,
+    dateOfMaintenance: toDDMMYY(dateInput.value),
+    typeOfMaintenance: typeSelect.value,
+    attendedBy: attendedBy.join(', '),
+    remarks: remarks.join(' | '),
+    timestamp: new Date().toISOString()
+  };
+
+  const btnSubmit = document.getElementById('btnSubmit');
+  btnSubmit.disabled = true;
+  submitStatus.className = 'loading';
+  submitStatus.textContent = '⏳ Submitting...';
+
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    submitStatus.className = 'ok';
+    submitStatus.textContent = '✅ Data submitted successfully!';
+
+    // Save state for lock mode & increment counter
+    if (lockMode) {
+      savedFormState = captureFormState();
+      sessionSubmitCount++;
+      updateSessionBadge();
+    }
+
+    setTimeout(() => { showEntry(); }, 1400);
+  } catch (err) {
+    submitStatus.className = 'err';
+    submitStatus.textContent = '❌ Submission failed. Please try again.';
+  } finally {
+    btnSubmit.disabled = false;
+  }
+});
+</script>
+</body>
+ </html>
