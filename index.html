@@ -73,7 +73,6 @@
 <h2 id="titleLevel">A Cloud Based Data System</h2>
 <h3 id="versionText">© Created by SSE/M/KKSO </h3>
 </div>
-
 <!-- MODE TOGGLE — 4 tabs now including More -->
 <div class="mode-toggle">
 <button class="mode-btn active" onclick="switchMode('view')" id="viewBtn">📋 View Data</button>
@@ -99,6 +98,25 @@
 <div class="panel-title">✏️ Data Entry Form</div>
 <div class="form-group"><label>SUBJECT</label><div class="select-wrapper"><select id="entrySubject" class="colorful-select g1"><option value="">-- Select Subject --</option></select></div></div>
 <div id="entrySubSubjectGroup" class="form-group" style="display:none"><label>SUB-SUBJECT</label><div class="select-wrapper"><select id="entrySubSubject" class="colorful-select g2"><option value="">-- Select Sub-Subject --</option></select></div></div>
+
+<!-- ✅ NEW: HTML Embed container for Entry Data -->
+<div id="entryHtmlEmbedSection" class="entry-embed-wrapper">
+  <div class="entry-embed-topbar">
+    <button class="entry-embed-back" onclick="closeEntryHtmlEmbed()">← Back</button>
+    <div class="entry-embed-title" id="entryEmbedTitle">Loading…</div>
+    <div style="width:60px;flex-shrink:0"></div>
+  </div>
+  <div class="entry-embed-body">
+    <div class="entry-embed-loading" id="entryEmbedLoading">
+      <div class="entry-embed-spinner"></div>
+      <span>Loading form…</span>
+    </div>
+    <iframe class="entry-embed-iframe" id="entryHtmlIframe" src="" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+      onload="onEntryIframeLoad()"></iframe>
+  </div>
+</div>
+
 <div id="entryDropdowns"></div>
 <div class="btn-group" id="entryBtnGroup" style="display:none">
 <button class="submit-btn" onclick="handleEntrySubmit()">📤 Submit Entry</button>
@@ -186,7 +204,7 @@
   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
   onload="onIframeLoad()"></iframe>
 </div>
-<!-- JS link here -->
+  <!-- JS link here -->
 <script src="script.js"></script>
 </body>
 </html>
