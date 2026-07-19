@@ -1319,18 +1319,16 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
   const attendedBy = staffSelects.map(s => s.value);
   const remarks = remarkTextareas.map(t => t.value.trim());
 
-  const payload = {
+    const payload = {
+    spreadsheetId: CONFIG.SHEET_ID,
     sheetName: CONFIG.SHEET_NAME,
-    assetId: currentAssetId,
-    station: currentDecoded.station,
-    group: currentDecoded.group,
-    subGroup: currentDecoded.subGroup,
-    equipmentName: currentDecoded.equipment,
-    dateOfMaintenance: toDDMMYY(dateInput.value),
-    typeOfMaintenance: typeSelect.value,
-    attendedBy: attendedBy.join(', '),
-    remarks: remarks.join(' | '),
-    timestamp: new Date().toISOString()
+    data: [
+      currentAssetId,
+      toDDMMYY(dateInput.value),
+      typeSelect.value,
+      attendedBy.join(', '),
+      remarks.join(', ')
+    ]
   };
 
   const btnSubmit = document.getElementById('btnSubmit');
@@ -1339,30 +1337,37 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
   submitStatus.textContent = '⏳ Submitting...';
 
   try {
-    await fetch(CONFIG.APPS_SCRIPT_URL, {
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
 
-    submitStatus.className = 'ok';
-    submitStatus.textContent = '✅ Data submitted successfully!';
+    const result = await response.json();
 
-    // Save state for lock mode & increment counter
-    if (lockMode) {
-      savedFormState = captureFormState();
-      sessionSubmitCount++;
-      updateSessionBadge();
+    if (result.success) {
+      submitStatus.className = 'ok';
+      submitStatus.textContent = '✅ Data submitted successfully!';
+
+      if (lockMode) {
+        savedFormState = captureFormState();
+        sessionSubmitCount++;
+        updateSessionBadge();
+      }
+
+      setTimeout(() => { showEntry(); }, 1400);
+    } else {
+      submitStatus.className = 'err';
+      submitStatus.textContent = '❌ Error: ' + result.error;
     }
-
-    setTimeout(() => { showEntry(); }, 1400);
   } catch (err) {
     submitStatus.className = 'err';
     submitStatus.textContent = '❌ Submission failed. Please try again.';
+    console.error(err);
   } finally {
     btnSubmit.disabled = false;
   }
 });
 </script>
 </body>
- </html>
+</html>
