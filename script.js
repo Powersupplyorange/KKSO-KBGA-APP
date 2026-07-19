@@ -1,6 +1,6 @@
 /* ===================== APP VERSION ===================== */
 /* Ravi you can change the version number here */
-const APP_VERSION="4.5.1";
+const APP_VERSION="4.6.0";
 
 /* ===================== CONFIGURATION ===================== */
 /* Ravi you can change all settings here */
@@ -74,7 +74,6 @@ function buildPersonalHTML(targetId){
 /* Ravi you can change the clock format here - year:'2-digit' shows 25 instead of 2025 */
 function updateClock(){const el=document.querySelector('.clock-widget');if(!el)return;const now=new Date();el.querySelector('.day').textContent=now.toLocaleDateString(undefined,{weekday:'short'});el.querySelector('.date').textContent=now.toLocaleDateString(undefined,{year:'2-digit',month:'short',day:'numeric'});el.querySelector('.time').textContent=now.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 updateClock();setInterval(updateClock,1000);
-
 /* ===================== LOGIN ===================== */
 async function handleLogin(){
   const uid=document.getElementById('loginUser').value.trim();
@@ -147,7 +146,6 @@ function handleLogout(){
   const l=localStorage.getItem('kkso_level'),r=localStorage.getItem('kkso_row');
   if(u&&p){currentUser=u;currentPassword=p;currentLevel=l||'staff';currentUserRow=parseInt(r)||-1;showApp()}
 })();
-
 /* ===================== CREDENTIAL CHECK ===================== */
 /* Ravi: This checks every hour AND when tab becomes visible again (phone wake/tab switch) */
 
@@ -252,7 +250,6 @@ async function initApp(){
       try{const pd=await fetchSheet(CONFIG.SHEET_NAME,`D${currentUserRow}:J${currentUserRow}`);currentUserPersonal=(pd[0]||[])}catch(e){}}
   }catch(e){console.error('Init error:',e)}
 }
-
 /* ===================== MORE / FOLDER-BASED APP HUB ===================== */
 
 /* Card gradient palettes for visual variety */
@@ -294,7 +291,6 @@ const FOLDER_STRIPE_COLORS=[
   Condition 2: A filled + B blank  → Subject folder > App (no sub-subject)
   Condition 3: A blank             → App shown directly in More root (no folder)
 */
-
 /* More tab state — moreNavPath, moreClickActions, moreTree declared in STATE section above */
 
 function handleMoreClick(idx){
@@ -392,14 +388,12 @@ async function loadMoreApps(){
     container.innerHTML='<div class="more-empty"><p>⚠️ Error loading apps.<br>'+e.message+'</p></div>';
   }
 }
-
 /* ===== Rendering ===== */
 
 function renderMoreView(){
   renderMoreBreadcrumb();
   const container=document.getElementById('moreAppsContainer');
   const desc=document.getElementById('moreHeaderDesc');
-
   if(moreNavPath.length===0){
     desc.textContent='Select a category below to explore';
     renderRootView(container);
@@ -435,7 +429,6 @@ function renderMoreBreadcrumb(){
       html+='<span class="more-breadcrumb-item" onclick="handleMoreClick('+sIdx+')">📁 '+moreNavPath[0]+'</span>';
     }
   }
-
   if(moreNavPath.length>=2){
     html+='<span class="more-breadcrumb-separator">›</span>';
     html+='<span class="more-breadcrumb-current">📂 '+moreNavPath[1]+'</span>';
@@ -546,7 +539,6 @@ function renderRootView(container){
 function renderSubjectView(container,subjectName){
   const subj=moreTree.subjects[subjectName];
   if(!subj){container.innerHTML='<div class="more-empty"><p>❌ Subject not found</p></div>';return}
-
   moreClickActions=[];
   let html='';
 
@@ -562,7 +554,6 @@ function renderSubjectView(container,subjectName){
   if(hasSubSubs){
     if(hasDirectApps)html+='<div class="more-section-divider">📂 Sub-Folders</div>';
     html+='<div class="more-apps-grid">';
-
     subj.subSubjectOrder.forEach((ssName,idx)=>{
       const ss=subj.subSubjects[ssName];
       if(!ss)return;
@@ -588,7 +579,6 @@ function renderSubjectView(container,subjectName){
         html+='</div>';
       }
     });
-
     html+='</div>';
   }
 
@@ -693,7 +683,6 @@ function openEmbeddedApp(appName,fileName){
   const iframe=document.getElementById('appEmbedIframe');
   const titleEl=document.getElementById('appEmbedTitle');
   const loadingEl=document.getElementById('appEmbedLoading');
-
   titleEl.textContent=appName;
   loadingEl.style.display='flex';
   iframe.src='';/* reset */
@@ -756,7 +745,6 @@ document.getElementById('viewSubSubject').addEventListener('change',function(){
   const idx=viewConfig.findIndex(r=>r&&String(r[0]||'').trim()===viewState.subject&&String(r[1]||'').trim()===ss);
   if(idx>=0)applyViewConfig(idx);
 });
-
 async function applyViewConfig(idx){
   const row=viewConfig[idx]||[];
   const lc=getLevelCols(currentLevel);
@@ -856,6 +844,7 @@ let entryState={config:[],dataValues:[],filteredIdxs:[],inputTitles:[],dropdownC
 
 document.getElementById('entrySubject').addEventListener('change',function(){
   const subject=this.value.trim();entryState.subject=subject;entryState.subSubject='';entryState.inputValues={};
+  closeEntryHtmlEmbed(true); /* ✅ NEW: hide embed if it was showing from a previous selection */
   document.getElementById('entryDropdowns').innerHTML='';document.getElementById('entryBtnGroup').style.display='none';
   document.getElementById('entryStatus').innerHTML='';
   const ssGroup=document.getElementById('entrySubSubjectGroup');
@@ -880,22 +869,56 @@ document.getElementById('entrySubject').addEventListener('change',function(){
 
 document.getElementById('entrySubSubject').addEventListener('change',function(){
   const ss=this.value.trim();entryState.subSubject=ss;entryState.inputValues={};
+  closeEntryHtmlEmbed(true); /* ✅ NEW: hide embed if it was showing from a previous selection */
   document.getElementById('entryDropdowns').innerHTML='';document.getElementById('entryBtnGroup').style.display='none';
   if(!ss)return;
   const idx=entryConfig.findIndex(r=>r&&String(r[0]||'').trim()===entryState.subject&&String(r[1]||'').trim()===ss);
   if(idx>=0)applyEntryConfig(idx);
 });
 
+/* Detect if a config cell value is an HTML file reference (not a number) */
+function isHtmlFileRef(v){
+  if(v===null||v===undefined)return false;
+  const s=String(v).trim();
+  if(!s)return false;
+  return /\.html?(\?.*)?(#.*)?$/i.test(s);
+}
+
 async function applyEntryConfig(idx){
   const row=entryConfig[idx]||[];
   const lc=getLevelCols(currentLevel);
-  entryState.subEnabled=String(row[lc.subCol]||'').trim().toLowerCase()==='true';
+  entryState.subEnabled=String(row[lc.subCol]||'').trim().toLowerCase()==='true'; /* Sub-Subject enable/disable - unchanged */
   entryState.baseInputCol=entryState.subEnabled?2:1;
+  entryState.targetSheet=String(row[lc.sheetCol]||'').trim(); /* Post data source sheet name - unchanged */
+
+  const zRaw=row[25]; /* Column Z raw value */
+
+  /* ✅ NEW: HTML EMBED MODE */
+  if(isHtmlFileRef(zRaw)){
+    entryState.htmlEmbedMode=true;
+    entryState.htmlFile=String(zRaw).trim();
+    entryState.inputTitles=[]; /* Z (input count) invalid in this mode */
+    entryState.dropdownCount=0; /* AA (dropdown/output count) invalid in this mode */
+    entryState.dataValues=[];
+    entryState.filteredIdxs=[];
+
+    /* hide normal fields/buttons, clear old status */
+    document.getElementById('entryDropdowns').innerHTML='';
+    document.getElementById('entryBtnGroup').style.display='none';
+    document.getElementById('entryStatus').innerHTML='';
+
+    openEntryHtmlEmbed(entryState.subject,entryState.subSubject,entryState.htmlFile,entryState.targetSheet,entryState.subEnabled);
+    return;
+  }
+  /* ===== EXISTING TEXT-BASED BEHAVIOR (unchanged) ===== */
+  entryState.htmlEmbedMode=false;
+  closeEntryHtmlEmbed(true); /* make sure embed is hidden/reset if switching back */
+
   const totalInputs=Math.max(0,parseInt(row[25]||'0',10)||0);
   entryState.dropdownCount=Math.max(0,parseInt(row[26]||'0',10)||0);
   const titles=[];for(let i=0;i<totalInputs;i++)titles.push(String(row[entryState.baseInputCol+i]||''));
   entryState.inputTitles=titles;
-  entryState.targetSheet=String(row[lc.sheetCol]||'').trim();
+
   if(!entryState.targetSheet)return;
   try{
     const vals=await fetchSheet(entryState.targetSheet,'A:'+CONFIG.DATA_FETCH_END_COL);
@@ -909,6 +932,57 @@ async function applyEntryConfig(idx){
     }
     buildEntryFields();
   }catch(e){document.getElementById('entryStatus').innerHTML='<div class="status-msg" style="color:red">Error: '+e.message+'</div>'}
+}
+
+/* ===================== ENTRY HTML EMBED (NEW) ===================== */
+function openEntryHtmlEmbed(subject,subSubject,fileName,targetSheet,subEnabled){
+  let url=fileName;
+  if(!/^https?:\/\//i.test(fileName)){
+    url=CONFIG.GITHUB_BASE_URL.replace(/\/$/,'')+'/'+fileName;
+  }
+  const params=new URLSearchParams();
+  params.set('subject',subject||'');
+  if(subEnabled)params.set('subSubject',subSubject||'');
+  params.set('sheet',targetSheet||'');
+  params.set('user',currentUser||'');
+  params.set('level',currentLevel||'');
+  url+=(url.includes('?')?'&':'?')+params.toString();
+
+  const wrap=document.getElementById('entryHtmlEmbedSection');
+  const iframe=document.getElementById('entryHtmlIframe');
+  const titleEl=document.getElementById('entryEmbedTitle');
+  const loadingEl=document.getElementById('entryEmbedLoading');
+
+  titleEl.textContent=subSubject?(subject+' / '+subSubject):subject;
+  loadingEl.style.display='flex';
+  wrap.classList.add('visible');       /* ✅ fullscreen show */
+  document.body.style.overflow='hidden'; /* ✅ lock background scroll */
+
+  iframe.src='';
+  setTimeout(()=>{iframe.src=url;},80);
+}
+
+function onEntryIframeLoad(){
+  const loadingEl=document.getElementById('entryEmbedLoading');
+  if(loadingEl)loadingEl.style.display='none';
+}
+
+function closeEntryHtmlEmbed(silent){
+  const wrap=document.getElementById('entryHtmlEmbedSection');
+  const iframe=document.getElementById('entryHtmlIframe');
+  if(wrap)wrap.classList.remove('visible'); /* ✅ fullscreen hide */
+  if(iframe)iframe.src='';
+  document.body.style.overflow='';          /* ✅ restore scroll */
+  entryState.htmlEmbedMode=false;
+  if(!silent){
+    document.getElementById('entrySubject').value='';
+    document.getElementById('entrySubSubject').value='';
+    document.getElementById('entrySubSubjectGroup').style.display='none';
+    document.getElementById('entryDropdowns').innerHTML='';
+    document.getElementById('entryBtnGroup').style.display='none';
+    document.getElementById('entryStatus').innerHTML='';
+    entryState.subject='';entryState.subSubject='';entryState.inputTitles=[];
+  }
 }
 
 function buildEntryFields(){
@@ -966,7 +1040,6 @@ async function handleEntrySubmit(){
     buildEntryFields();
   }catch(e){statusEl.innerHTML='<div class="status-msg" style="background:#fef2f2;color:#dc2626">❌ Error: '+e.message+'</div>'}
 }
-
 function handleEntryClear(){
   entryState.inputTitles.forEach((k,i)=>{if(i>=entryState.dropdownCount)entryState.inputValues[k]=''});
   document.getElementById('entryStatus').innerHTML='';buildEntryFields();
@@ -1026,7 +1099,6 @@ async function loadMyData(){
 
   renderMyEntries('');
 }
-
 function renderMyEntries(filterSubject){
   const container=document.getElementById('myEntriesTable');
   let entries=allMyEntries;
