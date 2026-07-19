@@ -420,6 +420,26 @@ const CONFIG = {
   SHEET_NAME: "Maintenance_Log",
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec"
 };
+// URL se parameters nikaalo
+function getUrlParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name) || '';
+}
+
+// Login info URL se le lo
+const loggedInUser = getUrlParam('user');
+const loggedInLevel = getUrlParam('level');
+const parentSheet = getUrlParam('sheet');
+function getCurrentTimestamp() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
+  const timeStr = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  return `${dateStr}, ${timeStr}`;
+}
 
 /* ============================================================
    MASTER DATA / MAPPING
@@ -1320,16 +1340,19 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
   const remarks = remarkTextareas.map(t => t.value.trim());
 
     const payload = {
-    spreadsheetId: CONFIG.SHEET_ID,
-    sheetName: CONFIG.SHEET_NAME,
-    data: [
-      currentAssetId,
-      toDDMMYY(dateInput.value),
-      typeSelect.value,
-      attendedBy.join(', '),
-      remarks.join(', ')
-    ]
-  };
+  spreadsheetId: CONFIG.SHEET_ID,
+  sheetName: CONFIG.SHEET_NAME,
+  data: [
+    currentAssetId,
+    toDDMMYY(dateInput.value),
+    typeSelect.value,
+    attendedBy.join(', '),
+    remarks.join(', '),
+    loggedInUser,              // ✅ Staff Name (URL se)
+    getCurrentTimestamp(),      // ✅ Date/Time
+    loggedInLevel               // ✅ Level (URL se)
+  ]
+};
 
   const btnSubmit = document.getElementById('btnSubmit');
   btnSubmit.disabled = true;
