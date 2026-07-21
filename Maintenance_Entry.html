@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Maintenance Entry</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="maping.js"></script>
@@ -440,10 +440,8 @@ function getCurrentTimestamp() {
     second: '2-digit'
   });
   return `${dateStr}, ${timeStr}`;
-  
-/* ============================================================
-   HELPER FUNCTIONS
-   ============================================================ */
+}
+
 function decodeAssetId(id) {
   const stationCode = id.slice(0,3);
   const groupCode = id.slice(3,5);
@@ -531,7 +529,7 @@ lockToggle.addEventListener('change', () => {
   if (!lockMode) {
     savedFormState = null;
     sessionSubmitCount = 0;
-    clearEntryPageSelections(); // reset entry page fields when unlocking
+    clearEntryPageSelections();
   }
   lockLabelText.textContent = lockMode ? '🔒 Locked' : '🔓 Unlocked';
   sessionChipWrap.style.display = lockMode ? 'flex' : 'none';
@@ -545,7 +543,7 @@ function updateSessionBadge() {
 
 btnClearFields.addEventListener('click', () => {
   savedFormState = null;
-  resetFormFields(true); // force blank fields, keep asset info
+  resetFormFields(true);
 });
 
 function captureFormState() {
@@ -837,15 +835,12 @@ function showEntry() {
   formPage.classList.remove('active');
   entryPage.classList.add('active');
 
-  // QR result/error ALWAYS reset — fresh scan required every time, regardless of lock
   qrResult.textContent = '';
   qrError.textContent = '';
 
   if (!lockMode) {
-    // Unlocked: full clear of Entry Page fields (old behavior)
     clearEntryPageSelections();
   } else {
-    // Locked: KEEP Asset Id input & Dropdown selections; just clear transient error text
     assetIdError.textContent = '';
     dropdownError.textContent = '';
   }
@@ -1112,20 +1107,20 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
   const attendedBy = staffSelects.map(s => s.value);
   const remarks = remarkTextareas.map(t => t.value.trim());
 
-    const payload = {
-  spreadsheetId: CONFIG.SHEET_ID,
-  sheetName: CONFIG.SHEET_NAME,
-  data: [
-    currentAssetId,
-    toDDMMYY(dateInput.value),
-    typeSelect.value,
-    attendedBy.join(', '),
-    remarks.join(', '),
-    loggedInUser,              // ✅ Staff Name (URL se)
-    getCurrentTimestamp(),      // ✅ Date/Time
-    loggedInLevel               // ✅ Level (URL se)
-  ]
-};
+  const payload = {
+    spreadsheetId: CONFIG.SHEET_ID,
+    sheetName: CONFIG.SHEET_NAME,
+    data: [
+      currentAssetId,
+      toDDMMYY(dateInput.value),
+      typeSelect.value,
+      attendedBy.join(', '),
+      remarks.join(', '),
+      loggedInUser,
+      getCurrentTimestamp(),
+      loggedInLevel
+    ]
+  };
 
   const btnSubmit = document.getElementById('btnSubmit');
   btnSubmit.disabled = true;
@@ -1166,4 +1161,4 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
 });
 </script>
 </body>
-</html>
+  </html>
