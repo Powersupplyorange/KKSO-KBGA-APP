@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Maintenance Entry</title>
+<title>Maintenance_Entry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -47,7 +47,7 @@
     max-width:480px; margin:0 auto;
     display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
-  .appTitle{ color:#fff; font-weight:700; font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+  .appTitle{ color:#fff; font-weight:700; font-size:1rem; display:flex; align-items:center; gap:5px; }
   .lockToggleWrap{ display:flex; align-items:center; gap:8px; }
   .lockLabel{ color:#fff; font-size:0.78rem; font-weight:600; white-space:nowrap; }
   .switch{ position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
@@ -84,8 +84,8 @@
   .page:not(.active){ display:none; }
   h1{ font-size:1.3rem; color:var(--primary-dark); text-align:center; margin:4px 0 16px; font-weight:800; }
   .section{
-    margin-bottom:18px;
-    padding:18px;
+    margin-bottom:10px;
+    padding:10px;
     border-radius:var(--radius);
     background:var(--card-bg);
     box-shadow:var(--shadow-sm);
@@ -99,7 +99,7 @@
   }
   label.sub{ font-weight:600; display:block; margin:12px 0 6px; color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:.3px; }
   .divider{
-    text-align:center; color:#a3adc2; margin:14px 0; font-weight:700;
+    text-align:center; color:#a3adc2; margin:5px 0; font-weight:700;
     font-size:0.72rem; letter-spacing:1.5px; position:relative;
   }
   .divider::before, .divider::after{
@@ -195,8 +195,8 @@
   .lockBanner.show{ display:flex; }
   .lockBanner b{ display:block; margin-bottom:2px; }
   .lockBanner span{ line-height:1.4; }
-  .formGroup{ margin-bottom:22px; }
-  .formGroup > label{ font-weight:700; display:block; margin-bottom:9px; color:var(--primary-dark); font-size:0.95rem; }
+  .formGroup{ margin-bottom:5px; }
+  .formGroup > label{ font-weight:700; display:block; margin-bottom:5px; color:var(--primary-dark); font-size:0.8rem; }
   .fieldErr{ color:var(--danger); font-size:0.78rem; margin-top:-2px; margin-bottom:6px; min-height:14px; font-weight:500; }
   .staffRow, .remarkRow{ display:flex; gap:8px; align-items:flex-start; margin-bottom:9px; }
   .staffRow select{ flex:1; margin-bottom:0; }
@@ -236,7 +236,7 @@
 
 <div class="appHeader">
   <div class="appHeaderInner">
-    <div class="appTitle">🛠️ Maintenance Manager</div>
+    <div class="appTitle">🛠️ Maintenance Logger</div>
     <div class="lockToggleWrap">
       <span class="lockLabel" id="lockLabelText">🔓 Unlocked</span>
       <label class="switch">
@@ -256,9 +256,8 @@
   <div class="lockBanner" id="entryLockBanner">
     <div>
       <b>🔒 Lock Mode Active</b>
-      <span>Asset Id / Dropdown selections are retained (except QR) for faster repeat entry.</span>
     </div>
-    <button type="button" class="clearFieldsBtn" id="btnClearEntrySelections">↺ Clear Selections</button>
+    <button type="button" class="clearFieldsBtn" id="btnClearEntrySelections">↺ Clear All</button>
   </div>
 
   <div class="section">
@@ -271,7 +270,7 @@
     </div>
     <div id="qrResult"></div>
     <div id="qrError" class="error"></div>
-    <div id="qrHint">Camera requires HTTPS (or localhost) and permission access.</div>
+    <!--<div id="qrHint">Camera requires HTTPS (or localhost) and permission access.</div>-->
   </div>
 
   <div class="divider">OR</div>
@@ -442,7 +441,7 @@ let sessionSubmitCount = 0;
 
 const lockToggle = document.getElementById('lockToggle');
 const lockLabelText = document.getElementById('lockLabelText');
-const sessionChipWrap = document.getElementById('sessionChipWrap');
+//const sessionChipWrap = document.getElementById('sessionChipWrap');//
 const sessionBadge = document.getElementById('sessionBadge');
 const lockBanner = document.getElementById('lockBanner');
 const lockBannerTitle = document.getElementById('lockBannerTitle');
@@ -661,7 +660,7 @@ let currentDecoded = null;
 
 function getMaintenanceTypes(assetId) {
   const code = assetId.slice(3, 7);
-  return typeOfMaintenanceMap[code] || ["Select Type"];
+  return typeOfMap[code] || ["Select Type"];
 }
 
 function populateMaintenanceTypes(assetId) {
