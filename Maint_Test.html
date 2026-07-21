@@ -381,12 +381,6 @@
     <label>Type Of Maintenance *</label>
     <select id="typeOfMaintenance">
       <option value="">Select Type</option>
-      <option value="YEARLY">Yearly</option>
-      <option value="HALF-YEARLY">Half-yearly</option>
-      <option value="QUARTERLY">Quarterly</option>
-      <option value="MONTHLY">Monthly</option>
-      <option value="FORTNIGHTLY">Fortnightly</option>
-      <option value="WEEKLY">Weekly</option>
     </select>
     <div class="fieldErr" id="typeErr"></div>
   </div>
@@ -812,7 +806,27 @@ const entryPage = document.getElementById('entryPage');
 const formPage = document.getElementById('formPage');
 let currentAssetId = null;
 let currentDecoded = null;
+/* NEW ADDED FOR TYPE OF MAINTENANCE DROPDOWN DYNAMIC*/
+  function getMaintenanceTypes(assetId) {
+  const code = assetId.slice(3, 7);
+  return typeOfMap[code] || ["Select Type"];
+}
+function populateMaintenanceTypes(assetId) {
+  const firstOption = document.createElement('option');
+  firstOption.value = '';
+  firstOption.textContent = 'Select Type';
+  typeSelect.innerHTML = '';
+  typeSelect.appendChild(firstOption);
 
+  const types = getMaintenanceTypes(assetId);
+  types.forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = type;
+    typeSelect.appendChild(opt);
+  });
+}
+  /* YAHA TAK HAI*/
 function showForm(assetId) {
   currentAssetId = assetId;
   currentDecoded = decodeAssetId(assetId);
