@@ -1,16 +1,23 @@
 /* ============================================================
    MASTER DATA / MAPPING
    ============================================================ */
+   /* ============================================================
+   STATION NAME
+   ============================================================ */
 const stationMap = {
   "200":"KKSO DEPOT", "201":"KKSO", "202":"KSJR", "203":"KJNN", "204":"KKSK",
   "205":"KHMD", "206":"KVIB", "207":"KRWT", "208":"KBST", "209":"KBGA"
 };
-
+/* ============================================================
+   GROUP CODE   
+   ============================================================ */
 const groupMap = {
-  "01": "HT", "02": "LT", "03": "Pump", "04": "DG",
-  "05": "Third_rail", "06": "Lift_&_Escalator", "07": "Fire", "08": "Split_&_HVAC"
+  "01": "HT", "02": "LT", "03": "PUMP", "04": "DG",
+  "05": "THIRD_RAIL", "06": "LIFT_&_ESCALATOR", "07": "FIRE", "08": "SPLIT_&_HVAC"
 };
-
+/* ============================================================
+   SUB-GROUP CODE   
+   ============================================================ */
 const subGroupMap = {
   "01": {
     "01":"33KV GIS SWITCHGEAR", "02":"RECTIFIER TRANSFORMER", "03":"DIODE RECTIFIER",
@@ -21,7 +28,9 @@ const subGroupMap = {
   },
   "02": {}, "03": {}, "04": {}, "05": {}, "06": {}, "07": {}, "08": {}
 };
-
+/* ============================================================
+   EQUPMENT NO
+   ============================================================ */
 const equipmentMap = {
   "01": {
     "01": {
@@ -59,7 +68,30 @@ const equipmentMap = {
   },
   "02": {}, "03": {}, "04": {}, "05": {}, "06": {}, "07": {}, "08": {}
 };
-
+/* ============================================================
+   MAINTENANCE TYPE
+   ============================================================ */
+const typeOfMaintenanceMap = {
+  "0101": ["YEARLY MAINTENACE MAINTENANCE", "2 YEARLY RELAY TESTING"],
+  "0102": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0103": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0104": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0105": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0106": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0107": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0108": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0109": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0110": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0111": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0112": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0113": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0114": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0115": ["YEARLY MAINTENACE MAINTENANCE"],
+  "0116": ["MONTHLY CLEANING AND READING"]
+};
+/* ============================================================
+   ALL ASSET ID
+   ============================================================ */
 const validAssetIdsByGroup = {
   "01": new Set([
 "200010101","200010102","200010103","200010104","200010105","200010106","200010107","200010108","200010109","200010110","200010111","200010121",
@@ -215,12 +247,14 @@ const validAssetIdsByGroup = {
   "02": new Set(), "03": new Set(), "04": new Set(),
   "05": new Set(), "06": new Set(), "07": new Set(), "08": new Set()
 };
-
+/* ============================================================
+   STAFF NAME
+   ============================================================ */
 const staffList = [
-"NARENDRA EKKA-SSE","RAJA MANDAL-SSE","SUMESH KUMAR-JE","KISHOR KUMAR-JE","MD.AMIR ANSARI-JE",
-"ARPAN MONDAL-JE","RAVI KUMAR MALHOTRA-Tech-I","NITISH KUMAR-Tech-I","SAMBHU DAS-TECH-II",
-"SURAJ THAKUR-TECH-II","NITISH KUMAR CHOUDHARY-TECH-II","SUMAN KUMAR-TECH-II","SHIVAM KUMAR-HELPER",
-"SUMAN THAKUR-HELPER","SUBRATA DAS-HELPER","BIKESH SINGH-HELPER","RAUSHAN KUMAR JOSHI-HELPER",
-"ANIL SINGH-HELPER","AMAN BHADURIA-HELPER","SURAJ KUMAR-HELPER","SUMAN KRISHNA ROY-HELPER",
-"DHARMENDRA KUMAR-HELPER","RAVI RANJAN KUMAR-HELPER","MANISH KUMAR-HELPER"
+"NARENDRA EKKA (SSE)","RAJA MANDAL (SSE)","KISHOR KUMAR (JE)","MD.AMIR ANSARI (JE)",
+"ARPAN MONDAL (JE)","RAVI KUMAR MALHOTRA (TECH-I)","NITISH KUMAR (TECH-I)","SAMBHU DAS (TECH-II)",
+"SURAJ THAKUR (TECH-II)","NITISH KUMAR CHOUDHARY (TECH-II)","SUMAN KUMAR (TECH-II)","SHIVAM KUMAR (HELPER)",
+"SUMAN THAKUR (HELPER)","SUBRATA DAS (HELPER)","BIKESH SINGH (HELPER)","RAUSHAN KUMAR JOSHI (HELPER)",
+"ANIL SINGH (HELPER)","AMAN BHADURIA (HELPER)","SURAJ KUMAR (HELPER)","SUMAN KRISHNA ROY (HELPER)",
+"DHARMENDRA KUMAR (HELPER)","RAVI RANJAN KUMAR (HELPER)","MANISH KUMAR (HELPER)"
 ];
