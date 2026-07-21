@@ -809,6 +809,7 @@ let currentDecoded = null;
 /* NEW ADDED FOR TYPE OF MAINTENANCE DROPDOWN DYNAMIC*/
   function getMaintenanceTypes(assetId) {
   const code = assetId.slice(3, 7);
+    const map = typeOfMap;
   return typeOfMap[code] || ["Select Type"];
 }
 function populateMaintenanceTypes(assetId) {
