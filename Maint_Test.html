@@ -810,7 +810,7 @@ let currentDecoded = null;
   function getMaintenanceTypes(assetId) {
   const code = assetId.slice(3, 7);
     const map = typeOfMap;
-  return typeOfMap[code] || ["Select Type"];
+  return map[code] || ["Select Type"];
 }
 function populateMaintenanceTypes(assetId) {
   const firstOption = document.createElement('option');
