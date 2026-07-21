@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Maintenance Entry</title>
-<link rel="preconnect" href="://fonts.googleapis.com">
+<title>Maintenance_Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="maping.js"></script>
@@ -37,8 +37,6 @@
     color:var(--text-main);
     -webkit-tap-highlight-color: transparent;
   }
-
-  /* ===== Sticky App Header ===== */
   .appHeader{
     position:sticky; top:0; z-index:200;
     background:linear-gradient(135deg, var(--primary), var(--secondary));
@@ -49,10 +47,9 @@
     max-width:480px; margin:0 auto;
     display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
-  .appTitle{ color:#fff; font-weight:700; font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+  .appTitle{ color:#fff; font-weight:700; font-size:1rem; display:flex; align-items:center; gap:5px; }
   .lockToggleWrap{ display:flex; align-items:center; gap:8px; }
   .lockLabel{ color:#fff; font-size:0.78rem; font-weight:600; white-space:nowrap; }
-
   .switch{ position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
   .switch input{ opacity:0; width:0; height:0; }
   .slider{
@@ -67,17 +64,6 @@
   }
   input:checked + .slider{ background-color:#10b981; }
   input:checked + .slider:before{ transform:translateX(22px); }
-
-  .sessionChip{
-    max-width:480px; margin:8px auto 0; padding:0 16px;
-    display:flex; justify-content:flex-end;
-  }
-  .sessionBadge{
-    background:rgba(255,255,255,0.25); color:#fff; font-size:0.72rem; font-weight:600;
-    padding:3px 10px; border-radius:20px; backdrop-filter: blur(4px);
-  }
-
-  /* ===== Page Container ===== */
   .page{
     max-width:480px;
     margin:0 auto;
@@ -88,13 +74,10 @@
   }
   @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .page:not(.active){ display:none; }
-
   h1{ font-size:1.3rem; color:var(--primary-dark); text-align:center; margin:4px 0 16px; font-weight:800; }
-
-  /* ===== Section Cards ===== */
   .section{
-    margin-bottom:18px;
-    padding:18px;
+    margin-bottom:10px;
+    padding:10px;
     border-radius:var(--radius);
     background:var(--card-bg);
     box-shadow:var(--shadow-sm);
@@ -107,17 +90,14 @@
     margin-bottom:12px; color:var(--primary-dark); font-size:1rem;
   }
   label.sub{ font-weight:600; display:block; margin:12px 0 6px; color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:.3px; }
-
   .divider{
-    text-align:center; color:#a3adc2; margin:14px 0; font-weight:700;
+    text-align:center; color:#a3adc2; margin:5px 0; font-weight:700;
     font-size:0.72rem; letter-spacing:1.5px; position:relative;
   }
   .divider::before, .divider::after{
     content:""; position:absolute; top:50%; width:38%; height:1px; background:var(--border);
   }
   .divider::before{ left:0; } .divider::after{ right:0; }
-
-  /* ===== Buttons ===== */
   button{
     cursor:pointer; border:none; border-radius:var(--radius-sm);
     padding:13px 18px; font-size:0.95rem; font-weight:600;
@@ -125,47 +105,38 @@
   }
   button:active{ transform:scale(0.97); }
   button:disabled{ opacity:0.55; cursor:not-allowed; transform:none !important; }
-
   #btnScanQr{
     background:linear-gradient(135deg,#00b09b,#00897b);
     color:#fff; width:100%; box-shadow:0 4px 14px rgba(0,137,123,0.35);
   }
   #btnScanQr:hover{ box-shadow:0 6px 20px rgba(0,137,123,0.45); transform:translateY(-1px); }
-
   #btnGetFormById, #btnGetFormByDropdown{
     background:linear-gradient(135deg, var(--primary), #6366f1);
     color:#fff; white-space:nowrap; box-shadow:0 4px 14px rgba(79,70,229,0.35);
   }
   #btnGetFormById:hover, #btnGetFormByDropdown:hover{ box-shadow:0 6px 20px rgba(79,70,229,0.45); transform:translateY(-1px); }
-
   #btnAddStaff, #btnAddRemark{
     background:linear-gradient(135deg, var(--success), var(--success-dark));
     color:#fff; box-shadow:0 4px 12px rgba(16,185,129,0.3);
   }
   #btnAddStaff:hover, #btnAddRemark:hover{ box-shadow:0 6px 18px rgba(16,185,129,0.4); transform:translateY(-1px); }
-
   .submitBtn{
     background:linear-gradient(135deg,#ef4444,#dc2626);
     color:#fff; width:100%; padding:16px; font-size:1.08rem; margin-top:14px;
     box-shadow:0 6px 18px rgba(239,68,68,0.4); letter-spacing:.3px;
   }
   .submitBtn:hover{ box-shadow:0 8px 24px rgba(239,68,68,0.5); transform:translateY(-1px); }
-
   .backBtn{
     background:#fff; color:var(--text-muted); width:100%; padding:13px; margin-top:10px;
     border:1.5px solid var(--border);
   }
   .backBtn:hover{ background:#f8fafc; border-color:#cbd5e1; }
-
   .clearFieldsBtn{
     background:#fff7ed; color:#b45309; border:1.5px solid #fdba74;
     padding:8px 14px; font-size:0.82rem; font-weight:600; white-space:nowrap;
   }
   .clearFieldsBtn:hover{ background:#ffedd5; }
-
   .row{ display:flex; gap:8px; }
-
-  /* ===== Inputs ===== */
   input[type=text], input[type=date], select, textarea{
     width:100%;
     padding:12px 13px;
@@ -189,10 +160,7 @@
     box-shadow:0 0 0 3px rgba(239,68,68,0.12) !important;
   }
   #assetIdInput{ flex:1; }
-
   .error{ color:var(--danger); font-size:0.82rem; margin-top:2px; min-height:16px; font-weight:500; }
-
-  /* ===== Info box ===== */
   .infoBox{
     background:linear-gradient(135deg,#eef2ff,#e0f2fe);
     padding:16px; border-radius:var(--radius);
@@ -201,10 +169,7 @@
   .infoRow{ display:flex; justify-content:space-between; padding:4px 0; font-size:0.9rem; gap:8px; }
   .infoRow span.k{ color:var(--text-muted); font-weight:500; }
   .infoRow span.v{ font-weight:700; text-align:right; color:var(--primary-dark); }
-
   hr.sep{ border:none; border-top:2px dashed #cbd5e1; margin:16px 0; }
-
-  /* ===== Lock Banner (shared: entry + form) ===== */
   .lockBanner{
     display:none;
     background:linear-gradient(135deg,#ecfdf5,#d1fae5);
@@ -222,26 +187,19 @@
   .lockBanner.show{ display:flex; }
   .lockBanner b{ display:block; margin-bottom:2px; }
   .lockBanner span{ line-height:1.4; }
-
-  /* ===== Form Groups ===== */
-  .formGroup{ margin-bottom:22px; }
-  .formGroup > label{ font-weight:700; display:block; margin-bottom:9px; color:var(--primary-dark); font-size:0.95rem; }
+  .formGroup{ margin-bottom:5px; }
+  .formGroup > label{ font-weight:700; display:block; margin-bottom:5px; color:var(--primary-dark); font-size:0.8rem; }
   .fieldErr{ color:var(--danger); font-size:0.78rem; margin-top:-2px; margin-bottom:6px; min-height:14px; font-weight:500; }
-
   .staffRow, .remarkRow{ display:flex; gap:8px; align-items:flex-start; margin-bottom:9px; }
   .staffRow select{ flex:1; margin-bottom:0; }
-
-  .remarkRow textarea{
-    flex:1; resize:vertical; font-size:1rem; line-height:1.5; font-family:inherit;
-  }
+  .remarkRow textarea{ flex:1; resize:vertical; font-size:1rem; line-height:1.5; font-family:inherit; }
   .remarkText.readonlyRemark{
-    background:#eef2f7; color:#334155; cursor:not-allowed; min-height:56px; font-weight:600;
+    background:#eef2f7; color:#334155; cursor:not-allowed; min-height:28px; font-weight:600;
     border-style:dashed;
   }
   .remarkText.addedRemark{
     min-height:150px; font-size:1.05rem; font-weight:600; color:#111;
   }
-
   .delBtn{
     background:linear-gradient(135deg,#f87171,#ef4444);
     color:#fff; padding:11px 14px; font-size:1.05rem;
@@ -249,7 +207,6 @@
     box-shadow:0 3px 10px rgba(239,68,68,0.3);
   }
   .delBtn:hover{ box-shadow:0 5px 14px rgba(239,68,68,0.4); }
-
   #submitStatus{
     text-align:center; margin-top:14px; font-weight:700; min-height:24px;
     padding:10px; border-radius:var(--radius-sm); font-size:0.92rem;
@@ -257,8 +214,6 @@
   #submitStatus.ok{ background:#dcfce7; color:#166534; }
   #submitStatus.err{ background:#fee2e2; color:#991b1b; }
   #submitStatus.loading{ background:#e0f2fe; color:#075985; }
-
-  /* ===== QR ===== */
   #qrReaderContainer{ margin-top:12px; text-align:center; }
   #qrVideo{ width:100%; border-radius:var(--radius-sm); background:#000; box-shadow:var(--shadow-md); }
   #btnCancelScan{ margin-top:10px; background:#f1f5f9; color:var(--text-muted); width:100%; border:1.5px solid var(--border); }
@@ -269,12 +224,9 @@
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- STICKY HEADER (LOCK TOGGLE) -->
-<!-- ============================================================ -->
 <div class="appHeader">
   <div class="appHeaderInner">
-    <div class="appTitle">🛠️ Maintenance Manager</div>
+    <div class="appTitle">🛠️ Maintenance Logger</div>
     <div class="lockToggleWrap">
       <span class="lockLabel" id="lockLabelText">🔓 Unlocked</span>
       <label class="switch">
@@ -284,22 +236,13 @@
     </div>
   </div>
 </div>
-<div class="sessionChip" id="sessionChipWrap" style="display:none;">
-  <span class="sessionBadge" id="sessionBadge">✅ 0 entries submitted</span>
-</div>
 
-<!-- ============================================================ -->
-<!-- PAGE 1: MAINTENANCE ENTRY PAGE -->
-<!-- ============================================================ -->
 <div id="entryPage" class="page active">
   <h1>Maintenance Entry Page</h1>
 
   <div class="lockBanner" id="entryLockBanner">
-    <div>
-      <b>🔒 Lock Mode Active</b>
-      <span>Asset Id / Dropdown selections are retained (except QR) for faster repeat entry.</span>
-    </div>
-    <button type="button" class="clearFieldsBtn" id="btnClearEntrySelections">↺ Clear Selections</button>
+    <div><b>🔒 Lock Mode Active</b></div>
+    <button type="button" class="clearFieldsBtn" id="btnClearEntrySelections">↺ Clear All</button>
   </div>
 
   <div class="section">
@@ -348,9 +291,6 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- PAGE 2: MAINTENANCE ENTRY FORM -->
-<!-- ============================================================ -->
 <div id="formPage" class="page">
   <h1>Maintenance Entry Form</h1>
 
@@ -368,6 +308,7 @@
     <div class="infoRow"><span class="k">Group:</span><span class="v" id="infoGroup">-</span></div>
     <div class="infoRow"><span class="k">Sub-Group:</span><span class="v" id="infoSubGroup">-</span></div>
     <div class="infoRow"><span class="k">Equipment Name:</span><span class="v" id="infoEquipment">-</span></div>
+    <div class="infoRow"><span class="k">Type Of Maintenance:</span><span class="v" id="infoMaintenanceType">-</span></div>
   </div>
   <hr class="sep">
 
@@ -408,26 +349,26 @@
 <script>
 /* ============================================================
    CONFIG
-   ============================================================ */
+============================================================ */
 const CONFIG = {
   SHEET_ID: "136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
   API_KEY: "AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI",
   SHEET_NAME: "Maintenance_Log",
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec"
 };
-// URL se parameters nikaalo
+
 function getUrlParam(name) {
   const params = new URLSearchParams(window.location.search);
   return params.get(name) || '';
 }
 
-// Login info URL se le lo
 const loggedInUser = getUrlParam('user');
 const loggedInLevel = getUrlParam('level');
 const parentSheet = getUrlParam('sheet');
+
 function getCurrentTimestamp() {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
+  const dateStr = now.toLocaleDateString('en-GB');
   const timeStr = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -436,6 +377,9 @@ function getCurrentTimestamp() {
   return `${dateStr}, ${timeStr}`;
 }
 
+/* ============================================================
+   ASSET ID DECODE / VALIDATE
+============================================================ */
 function decodeAssetId(id) {
   const stationCode = id.slice(0,3);
   const groupCode = id.slice(3,5);
@@ -483,16 +427,18 @@ function markInvalid(el) { el.classList.add('invalid'); }
 function clearInvalid(el) { el.classList.remove('invalid'); }
 
 /* ============================================================
-   LOCK / MULTI-ENTRY STATE
-   ============================================================ */
+   GLOBAL STATE + DOM REFERENCES
+============================================================ */
 let lockMode = false;
-let savedFormState = null; // { date, type, staff:[], remarks:[] }
-let sessionSubmitCount = 0;
+let savedFormState = null;
+let currentAssetId = null;
+let currentDecoded = null;
+
+const entryPage = document.getElementById('entryPage');
+const formPage = document.getElementById('formPage');
 
 const lockToggle = document.getElementById('lockToggle');
 const lockLabelText = document.getElementById('lockLabelText');
-const sessionChipWrap = document.getElementById('sessionChipWrap');
-const sessionBadge = document.getElementById('sessionBadge');
 const lockBanner = document.getElementById('lockBanner');
 const lockBannerTitle = document.getElementById('lockBannerTitle');
 const lockBannerText = document.getElementById('lockBannerText');
@@ -500,6 +446,53 @@ const btnClearFields = document.getElementById('btnClearFields');
 const entryLockBanner = document.getElementById('entryLockBanner');
 const btnClearEntrySelections = document.getElementById('btnClearEntrySelections');
 
+const ddStation = document.getElementById('ddStation');
+const ddGroup = document.getElementById('ddGroup');
+const ddSubGroup = document.getElementById('ddSubGroup');
+const ddEquipment = document.getElementById('ddEquipment');
+const dropdownError = document.getElementById('dropdownError');
+const assetIdInput = document.getElementById('assetIdInput');
+const assetIdError = document.getElementById('assetIdError');
+
+const dateInput = document.getElementById('dateOfMaintenance');
+const typeSelect = document.getElementById('typeOfMaintenance');
+const dateErr = document.getElementById('dateErr');
+const typeErr = document.getElementById('typeErr');
+
+const attendedByContainer = document.getElementById('attendedByContainer');
+const staffErr = document.getElementById('staffErr');
+const remarksContainer = document.getElementById('remarksContainer');
+const btnAddRemark = document.getElementById('btnAddRemark');
+const remarksErr = document.getElementById('remarksErr');
+
+/* ============================================================
+   TYPE OF MAINTENANCE MAPPING
+============================================================ */
+
+function getMaintenanceTypes(assetId) {
+  const code = String(assetId).slice(3, 7);
+  return typeOfMap[code] || [];
+}
+
+function populateMaintenanceTypes(assetId) {
+  const firstOption = document.createElement('option');
+  firstOption.value = '';
+  firstOption.textContent = 'Select Type';
+  typeSelect.innerHTML = '';
+  typeSelect.appendChild(firstOption);
+
+  const types = getMaintenanceTypes(assetId);
+  types.forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = type;
+    typeSelect.appendChild(opt);
+  });
+}
+
+/* ============================================================
+   LOCK MODE
+============================================================ */
 function clearEntryPageSelections() {
   assetIdInput.value = '';
   assetIdError.textContent = '';
@@ -522,18 +515,11 @@ lockToggle.addEventListener('change', () => {
   lockMode = lockToggle.checked;
   if (!lockMode) {
     savedFormState = null;
-    sessionSubmitCount = 0;
     clearEntryPageSelections();
   }
   lockLabelText.textContent = lockMode ? '🔒 Locked' : '🔓 Unlocked';
-  sessionChipWrap.style.display = lockMode ? 'flex' : 'none';
-  updateSessionBadge();
   updateEntryLockBanner();
 });
-
-function updateSessionBadge() {
-  sessionBadge.textContent = `✅ ${sessionSubmitCount} entries submitted`;
-}
 
 btnClearFields.addEventListener('click', () => {
   savedFormState = null;
@@ -549,17 +535,21 @@ function captureFormState() {
   };
 }
 
-/* ============================================================
-   ENTRY PAGE LOGIC
-   ============================================================ */
-const ddStation = document.getElementById('ddStation');
-const ddGroup = document.getElementById('ddGroup');
-const ddSubGroup = document.getElementById('ddSubGroup');
-const ddEquipment = document.getElementById('ddEquipment');
-const dropdownError = document.getElementById('dropdownError');
-const assetIdInput = document.getElementById('assetIdInput');
-const assetIdError = document.getElementById('assetIdError');
+function updateLockBanner() {
+  if (lockMode) {
+    lockBanner.classList.add('show');
+    lockBannerTitle.textContent = '🔒 Lock Mode Active';
+    lockBannerText.textContent = savedFormState
+      ? 'Fields auto-filled from previous entry. Review & Submit.'
+      : 'This is your first entry — future scans will retain these values.';
+  } else {
+    lockBanner.classList.remove('show');
+  }
+}
 
+/* ============================================================
+   DROPDOWN POPULATION (Station / Group / SubGroup / Equipment)
+============================================================ */
 function populateStationDropdown() {
   ddStation.innerHTML = '<option value="">Select Station</option>';
   Object.entries(stationMap).forEach(([code,name]) => {
@@ -669,7 +659,6 @@ document.getElementById('btnGetFormByDropdown').addEventListener('click', () => 
   showForm(assetId);
 });
 
-/* --- Asset Id manual entry --- */
 assetIdInput.addEventListener('input', (e) => {
   e.target.value = e.target.value.replace(/\D/g,'').slice(0,9);
   assetIdError.textContent = '';
@@ -689,7 +678,9 @@ document.getElementById('btnGetFormById').addEventListener('click', () => {
   showForm(id);
 });
 
-/* --- QR Scan --- */
+/* ============================================================
+   QR SCANNER
+============================================================ */
 const btnScanQr = document.getElementById('btnScanQr');
 const qrReaderContainer = document.getElementById('qrReaderContainer');
 const qrVideo = document.getElementById('qrVideo');
@@ -800,34 +791,8 @@ function handleQrResult(text) {
 }
 
 /* ============================================================
-   FORM PAGE LOGIC
-   ============================================================ */
-const entryPage = document.getElementById('entryPage');
-const formPage = document.getElementById('formPage');
-let currentAssetId = null;
-let currentDecoded = null;
-/* NEW ADDED FOR TYPE OF MAINTENANCE DROPDOWN DYNAMIC*/
-  function getMaintenanceTypes(assetId) {
-  const code = assetId.slice(3, 7);
-    const map = typeOfMap;
-  return map[code] || ["Select Type"];
-}
-function populateMaintenanceTypes(assetId) {
-  const firstOption = document.createElement('option');
-  firstOption.value = '';
-  firstOption.textContent = 'Select Type';
-  typeSelect.innerHTML = '';
-  typeSelect.appendChild(firstOption);
-
-  const types = getMaintenanceTypes(assetId);
-  types.forEach(type => {
-    const opt = document.createElement('option');
-    opt.value = type;
-    opt.textContent = type;
-    typeSelect.appendChild(opt);
-  });
-}
-  /* YAHA TAK HAI*/
+   SHOW FORM / SHOW ENTRY (PAGE NAVIGATION)
+============================================================ */
 function showForm(assetId) {
   currentAssetId = assetId;
   currentDecoded = decodeAssetId(assetId);
@@ -837,6 +802,10 @@ function showForm(assetId) {
   document.getElementById('infoGroup').textContent = currentDecoded.group;
   document.getElementById('infoSubGroup').textContent = currentDecoded.subGroup;
   document.getElementById('infoEquipment').textContent = currentDecoded.equipment;
+
+  populateMaintenanceTypes(assetId);
+  document.getElementById('infoMaintenanceType').textContent =
+    typeSelect.options.length > 1 ? typeSelect.options[1].textContent : '-';
 
   resetFormFields();
   updateLockBanner();
@@ -849,19 +818,10 @@ function showForm(assetId) {
 function showEntry() {
   formPage.classList.remove('active');
   entryPage.classList.add('active');
-
   qrResult.textContent = '';
   qrError.textContent = '';
-
-  if (!lockMode) {
-    clearEntryPageSelections();
-  } else {
-    assetIdError.textContent = '';
-    dropdownError.textContent = '';
-  }
-
+  if (!lockMode) clearEntryPageSelections();
   updateEntryLockBanner();
-
   document.getElementById('submitStatus').textContent = '';
   document.getElementById('submitStatus').className = '';
   window.scrollTo(0,0);
@@ -869,41 +829,20 @@ function showEntry() {
 
 document.getElementById('btnBack').addEventListener('click', showEntry);
 
-function updateLockBanner() {
-  if (lockMode) {
-    lockBanner.classList.add('show');
-    if (savedFormState) {
-      lockBannerTitle.textContent = '🔒 Lock Mode Active';
-      lockBannerText.textContent = 'Fields auto-filled from previous entry. Review & Submit.';
-    } else {
-      lockBannerTitle.textContent = '🔒 Lock Mode Active';
-      lockBannerText.textContent = 'This is your first entry — future scans will retain these values.';
-    }
-  } else {
-    lockBanner.classList.remove('show');
-  }
-}
-
-/* --- Date / Type --- */
-const dateInput = document.getElementById('dateOfMaintenance');
-const typeSelect = document.getElementById('typeOfMaintenance');
-const dateErr = document.getElementById('dateErr');
-const typeErr = document.getElementById('typeErr');
-
+/* ============================================================
+   FORM FIELDS (Date, Type, Staff, Remarks)
+============================================================ */
 dateInput.addEventListener('change', () => { clearInvalid(dateInput); dateErr.textContent=''; });
 typeSelect.addEventListener('change', () => {
   clearInvalid(typeSelect); typeErr.textContent='';
+  document.getElementById('infoMaintenanceType').textContent = typeSelect.value || '-';
   const firstRemark = document.querySelector('.remarkText');
   if (firstRemark && typeSelect.value) {
-    firstRemark.value = `${typeSelect.value} MAINTENANCE DONE`;
+    firstRemark.value = `${typeSelect.value} DONE`;
     clearInvalid(firstRemark);
     document.getElementById('remarksErr').textContent = '';
   }
 });
-
-/* --- Attended By (dynamic, no repeat) --- */
-const attendedByContainer = document.getElementById('attendedByContainer');
-const staffErr = document.getElementById('staffErr');
 
 function getSelectedStaffValues() {
   return Array.from(document.querySelectorAll('.staffSelect')).map(s => s.value).filter(v => v);
@@ -963,18 +902,11 @@ function addStaffRow(presetValue) {
   attendedByContainer.appendChild(row);
 
   renderStaffOptions(select);
-  if (presetValue) {
-    select.value = presetValue;
-  }
+  if (presetValue) select.value = presetValue;
   updateStaffDeleteVisibility();
 }
 
 document.getElementById('btnAddStaff').addEventListener('click', () => addStaffRow());
-
-/* --- Remarks (max 2 boxes: readonly auto + 1 editable) --- */
-const remarksContainer = document.getElementById('remarksContainer');
-const btnAddRemark = document.getElementById('btnAddRemark');
-const remarksErr = document.getElementById('remarksErr');
 
 function addRemarkRow(prefill = '', readonly = false) {
   const rows = document.querySelectorAll('.remarkRow');
@@ -989,7 +921,7 @@ function addRemarkRow(prefill = '', readonly = false) {
 
   if (readonly) {
     textarea.readOnly = true;
-    textarea.rows = 3;
+    textarea.rows = 2;
     textarea.classList.add('readonlyRemark');
   } else {
     textarea.rows = 7;
@@ -999,6 +931,7 @@ function addRemarkRow(prefill = '', readonly = false) {
       remarksErr.textContent = '';
     });
   }
+
   row.appendChild(textarea);
 
   if (rows.length >= 1) {
@@ -1026,7 +959,6 @@ function updateRemarkAddVisibility() {
 
 btnAddRemark.addEventListener('click', () => addRemarkRow(''));
 
-/* --- Reset / Restore form fields when opening form --- */
 function resetFormFields(forceBlank) {
   dateErr.textContent = ''; typeErr.textContent = ''; staffErr.textContent = ''; remarksErr.textContent = '';
   clearInvalid(dateInput); clearInvalid(typeSelect);
@@ -1036,6 +968,7 @@ function resetFormFields(forceBlank) {
   if (useSaved) {
     dateInput.value = savedFormState.date || '';
     typeSelect.value = savedFormState.type || '';
+    document.getElementById('infoMaintenanceType').textContent = typeSelect.value || '-';
 
     attendedByContainer.innerHTML = '';
     if (savedFormState.staff.length === 0) {
@@ -1053,6 +986,8 @@ function resetFormFields(forceBlank) {
   } else {
     dateInput.value = '';
     typeSelect.value = '';
+    document.getElementById('infoMaintenanceType').textContent =
+      typeSelect.options.length > 1 ? typeSelect.options[1].textContent : '-';
 
     attendedByContainer.innerHTML = '';
     addStaffRow();
@@ -1067,8 +1002,8 @@ function resetFormFields(forceBlank) {
 }
 
 /* ============================================================
-   SUBMIT with full validation
-   ============================================================ */
+   SUBMIT HANDLER
+============================================================ */
 document.getElementById('btnSubmit').addEventListener('click', async () => {
   const formError = document.getElementById('formError');
   const submitStatus = document.getElementById('submitStatus');
@@ -1155,11 +1090,7 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
       submitStatus.className = 'ok';
       submitStatus.textContent = '✅ Data submitted successfully!';
 
-      if (lockMode) {
-        savedFormState = captureFormState();
-        sessionSubmitCount++;
-        updateSessionBadge();
-      }
+      if (lockMode) savedFormState = captureFormState();
 
       setTimeout(() => { showEntry(); }, 1400);
     } else {
