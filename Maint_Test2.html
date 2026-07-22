@@ -1069,11 +1069,15 @@ const btnSubmit = document.getElementById('btnSubmit');
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: currentAssetId,
-        email: dateInput.value,
-        phone: typeSelect.value,
-        company: attendedBy.join(', '),
-        message: remarks.join(' | ')
+        assetIdNo: currentAssetId,
+        dateOfMaint: dateInput.value,
+        typeOfMaint: typeSelect.value,
+        attendedByStaff: attendedBy.join(', '),
+        cheksheet:'',
+        remark: remarks.join(' | '),
+        nameOfEntry:loggedInUser,
+        levelOfEntry: loggedInLevel,
+        
       })
     });
 
