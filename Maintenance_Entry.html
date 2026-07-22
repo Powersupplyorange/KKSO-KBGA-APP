@@ -554,7 +554,7 @@ function populateStationDropdown() {
   ddStation.innerHTML = '<option value="">Select Station</option>';
   Object.entries(stationMap).forEach(([code,name]) => {
     const opt = document.createElement('option');
-    opt.value = code; opt.textContent = `${name} (${code})`;
+    opt.value = code; opt.textContent = `${name}`;
     ddStation.appendChild(opt);
   });
 }
