@@ -1128,7 +1128,6 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  const attendedBy = staffSelects.map(s => s.value);
 
   const dataFields = {
- formType: currentMode, // 'entry' or 'edit'
  assetIdNo: currentAssetId,
  dateOfFailure: toDDMMYY(dateInput.value),
  fault: faultInput.value.trim(),
@@ -1139,7 +1138,8 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  attendedByStaff: attendedBy.join(', '),
  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
  nameOfEntry: loggedInUser,
- staffLevel: loggedInLevel
+ staffLevel: loggedInLevel,
+ formType: currentMode // 'entry' or 'edit'
  };
 
  if (currentMode === 'edit' && editSelectedRow) {
