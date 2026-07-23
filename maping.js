@@ -258,3 +258,9 @@ const staffList = [
 "ANIL SINGH (HELPER)","AMAN BHADURIA (HELPER)","SURAJ KUMAR (HELPER)","SUMAN KRISHNA ROY (HELPER)",
 "DHARMENDRA KUMAR (HELPER)","RAVI RANJAN KUMAR (HELPER)","MANISH KUMAR (HELPER)"
 ];
+/* ============================================================
+   REPORT PERSON NAME
+   ============================================================ */
+const reportedPersonMap = [ 
+    "TPC","ELECTRICAL STAFF"
+];
