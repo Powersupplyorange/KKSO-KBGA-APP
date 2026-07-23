@@ -1127,7 +1127,7 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
 
  const attendedBy = staffSelects.map(s => s.value);
 
- const payload = {
+  const dataFields = {
  formType: currentMode, // 'entry' or 'edit'
  assetIdNo: currentAssetId,
  dateOfFailure: toDDMMYY(dateInput.value),
@@ -1143,9 +1143,14 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  };
 
  if (currentMode === 'edit' && editSelectedRow) {
- // helps the Worker/back-end match the exact row being rectified
- payload.originalFailureDate = editSelectedRow[1] || '';
+ dataFields.originalFailureDate = editSelectedRow[1] || '';
  }
+
+ // ⭐ Worker requires payload wrapped as { target, data }
+ const payload = {
+ target: 'Failure_Log',
+ data: dataFields
+ };
 
  const btnSubmit = document.getElementById('btnSubmit');
  btnSubmit.disabled = true;
