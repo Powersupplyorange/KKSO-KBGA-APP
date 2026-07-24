@@ -1057,31 +1057,30 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
   const attendedBy = staffSelects.map(s => s.value);
   const remarks = remarkTextareas.map(t => t.value.trim());
 
-  const payload = {
-    spreadsheetId: CONFIG.SHEET_ID,
-    sheetName: CONFIG.SHEET_NAME,
-    data: [
-      currentAssetId,
-      toDDMMYY(dateInput.value),
-      typeSelect.value,
-      attendedBy.join(', '),
-      remarks.join(', '),
-      loggedInUser,
-      getCurrentTimestamp(),
-      loggedInLevel
-    ]
-  };
-
-  const btnSubmit = document.getElementById('btnSubmit');
+const btnSubmit = document.getElementById('btnSubmit');
   btnSubmit.disabled = true;
+  submitStatus.textContent = 'Submitting...';
   submitStatus.className = 'loading';
-  submitStatus.textContent = '⏳ Submitting...';
 
   try {
-    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    const response = await fetch('https://keyps.powersupplyorange.workers.dev', {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        target: "Maintenance_Log",
+        data: {
+        assetIdNo: currentAssetId,
+        dateOfMaint: dateInput.value,
+        typeOfMaint: typeSelect.value,
+        attendedByStaff : attendedBy.join(', '),
+        cheksheet:'',
+        remark: remarks.join('  |  '),
+        nameOfEntry:loggedInUser,
+        staffLevel: loggedInLevel,
+        }
+      })
     });
 
     const result = await response.json();
