@@ -991,6 +991,11 @@ function clearEditFieldsBlank() {
 function populateEditFields(row) {
  // row: [AssetId, DateOfFailure, Fault, ReportedBy, Repercussion, CauseOfFailure, ActionTaken, AttendedBy, RectificationDate]
  dateInput.value = convertToInputDate(row[1]);
+ if (dateInput.value) {
+ const sameDay = new Date(dateInput.value);
+ sameDay.setDate(sameDay.getDate() + 0);
+ rectificationDate.min = sameDay.toISOString().slice(0,10);
+ }
  faultInput.value = row[2] || '';
  populateReportedByDropdown(reportedBySelect, row[3] || '');
  repercussionInput.value = row[4] || '';
@@ -1040,7 +1045,14 @@ btnEditAttendedBy.addEventListener('click', () => {
  btnAddStaff.style.display = 'inline-block';
 });
 
-rectificationDate.addEventListener('change', () => { clearInvalid(rectificationDate); rectDateErr.textContent=''; });
+rectificationDate.addEventListener('change', () => {
+ clearInvalid(rectificationDate);
+ rectDateErr.textContent = '';
+ if (rectificationDate.value && dateInput.value && rectificationDate.value < dateInput.value) {
+ markInvalid(rectificationDate);
+ rectDateErr.textContent = 'Rectification Date must be equal or greater than Date Of Failure.';
+ }
+});
 
 /* ============================================================
  CLEAR FIELDS BUTTON (works for both modes)
@@ -1108,9 +1120,13 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  staffSelects.forEach(clearInvalid);
  }
 
- if (currentMode === 'edit') {
+  if (currentMode === 'edit') {
  if (!rectificationDate.value) {
  rectDateErr.textContent = 'Rectification Date is mandatory.';
+ markInvalid(rectificationDate);
+ hasError = true;
+ } else if (dateInput.value && rectificationDate.value < dateInput.value) {
+ rectDateErr.textContent = 'Rectification Date must be equal or greater than Date Of Failure.';
  markInvalid(rectificationDate);
  hasError = true;
  }
@@ -1128,7 +1144,6 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  const attendedBy = staffSelects.map(s => s.value);
 
   const dataFields = {
- formType: currentMode, // 'entry' or 'edit'
  assetIdNo: currentAssetId,
  dateOfFailure: toDDMMYY(dateInput.value),
  fault: faultInput.value.trim(),
@@ -1139,7 +1154,8 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  attendedByStaff: attendedBy.join(', '),
  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
  nameOfEntry: loggedInUser,
- staffLevel: loggedInLevel
+ staffLevel: loggedInLevel,
+ formType: currentMode // 'entry' or 'edit'
  };
 
  if (currentMode === 'edit' && editSelectedRow) {
