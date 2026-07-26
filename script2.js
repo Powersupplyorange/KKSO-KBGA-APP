@@ -1130,7 +1130,7 @@ async function loadMyData(){
   allMyEntries=[];
   const sheetNames=[...new Set(entryConfig.filter(r=>r&&String(r[lc.sheetCol]||'').trim()).map(r=>String(r[lc.sheetCol]).trim()))];
 
-  for(const sn of sheetNames){
+  /*for(const sn of sheetNames){
     try{
       const data=await fetchSheet(sn,'K:'+CONFIG.DATA_FETCH_END_COL);
       for(let i=0;i<data.length;i++){
@@ -1141,7 +1141,23 @@ async function loadMyData(){
         }
       }
     }catch(e){}
+  }*/
+  /* naya replace above*/
+  for(const sn of sheetNames){
+  try{
+    /* Ravi: Ye same cache use karta hai jo View/Entry me use ho raha hai.
+       Agar sheet already load ho chuki hai to yahan koi extra API call nahi lagega! */
+    const fullData=await fetchSheetDataCached(sn);
+    for(let i=0;i<fullData.length;i++){
+      const row=(fullData[i]||[]).slice(10); /* K column se start (A=0...K=10) - purani indexing waisi hi rahegi */
+      const submitter=String(row[15]||'').trim();
+      if(submitter===currentUser){
+        allMyEntries.push({sheet:sn,subject:String(row[0]||'').trim(),subSubject:String(row[1]||'').trim(),data:row,rowIdx:i+1});
+      }
+    }
+  }catch(e){}
   }
+  /* naya yaha tak*/
 
   allMyEntries.sort((a,b)=>{
     const da=String((a.data||[])[16]||'');const db=String((b.data||[])[16]||'');
