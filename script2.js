@@ -54,7 +54,74 @@ function driveDirect(u){if(typeof u!=="string")return u;let m=u.match(/drive\.go
 function extractImage(v){if(typeof v!=="string")return null;const m=v.match(/=*\s*IMAGE\s*\(\s*"([^"]+)"/i);if(m)return driveDirect(m[1]);if(isUrl(v)&&/\.(jpg|jpeg|png|gif|webp|bmp|svg)/i.test(v))return driveDirect(v);return null}
 function driveFileId(u){if(typeof u!=="string")return null;let m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/i);if(m)return m[1];m=u.match(/[?&]id=([^&]+)/i);if(m)return m[1];return null}
 function getLevelCols(level){if(level==="admin")return{sheetCol:27,subCol:28};if(level==="supervisor")return{sheetCol:29,subCol:30};return{sheetCol:31,subCol:32}}
+/* yaha se start naya script verson 1 se alag*/
+/* ===================== SMART DATA CACHE (Growing-Data Speed Fix) ===================== */
+/* Ravi: Ye cache system sirf pehli baar poora data fetch karta hai.
+   Uske baad sirf NAYE added rows fetch karta hai - purana data dobara nahi mangwata.
+   Isse jitna bhi data badhe, app ki speed hamesha fast rahegi. */
 
+const DataCache={values:{},formulas:{}};
+
+/* localStorage me save karo taaki page reload hone par bhi cache na ude */
+function cacheSave(type,sheetName,obj){
+  try{localStorage.setItem('dcache_'+type+'_'+sheetName,JSON.stringify(obj))}catch(e){/* storage full - ignore, memory cache chalta rahega */}
+}
+function cacheLoad(type,sheetName){
+  try{const raw=localStorage.getItem('dcache_'+type+'_'+sheetName);return raw?JSON.parse(raw):null}catch(e){return null}
+}
+
+/* Generic incremental fetcher - values aur formulas dono ke liye kaam karta hai */
+async function fetchSheetSmart(sheetName,isFormula){
+  const store=isFormula?DataCache.formulas:DataCache.values;
+  const cacheType=isFormula?'formula':'value';
+  const endCol=CONFIG.DATA_FETCH_END_COL;
+
+  /* Page abhi load hui hai to localStorage se purana cache wapas le aao */
+  if(!store[sheetName]){
+    const saved=cacheLoad(cacheType,sheetName);
+    if(saved)store[sheetName]=saved;
+  }
+
+  const cached=store[sheetName];
+
+  if(cached&&cached.lastRow>0){
+    /* Sirf naye rows fetch karo - jo cache ke baad add hue hain */
+    const startRow=cached.lastRow+1;
+    const range=`A${startRow}:${endCol}`;
+    try{
+      const newRows=isFormula?await fetchSheetFormulas(sheetName,range):await fetchSheet(sheetName,range);
+      if(newRows&&newRows.length){
+        cached.rows=cached.rows.concat(newRows);
+        cached.lastRow+=newRows.length;
+        store[sheetName]=cached;
+        cacheSave(cacheType,sheetName,cached);
+      }
+      return cached.rows;
+    }catch(e){
+      console.warn('Incremental fetch failed for',sheetName,'- using cached data',e);
+      return cached.rows; /* error aaye to purana cache hi de do, app crash nahi hoga */
+    }
+  }else{
+    /* Pehli baar - poora data fetch karo (ek hi baar bhaari fetch hoga) */
+    const range=`A:${endCol}`;
+    const rows=isFormula?await fetchSheetFormulas(sheetName,range):await fetchSheet(sheetName,range);
+    const obj={rows:rows,lastRow:rows.length};
+    store[sheetName]=obj;
+    cacheSave(cacheType,sheetName,obj);
+    return rows;
+  }
+}
+
+function fetchSheetDataCached(sheetName){return fetchSheetSmart(sheetName,false)}
+function fetchSheetFormulasCached(sheetName){return fetchSheetSmart(sheetName,true)}
+
+/* Manual refresh - agar kabhi data mismatch lage to ye call karo (console se ya button se) */
+function forceRefreshAllCaches(){
+  DataCache.values={};DataCache.formulas={};
+  try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('dcache_'))localStorage.removeItem(k)})}catch(e){}
+  location.reload();
+}
+/* yaha tak naya script verson 1 se alag*/
 function buildPersonalHTML(targetId){
   const div=document.getElementById(targetId);
   if(!div)return;
