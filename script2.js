@@ -992,8 +992,12 @@ async function applyEntryConfig(idx){
 
   if(!entryState.targetSheet)return;
   try{
-    const vals=await fetchSheet(entryState.targetSheet,'A:'+CONFIG.DATA_FETCH_END_COL);
-    entryState.dataValues=vals||[];
+    /*const vals=await fetchSheet(entryState.targetSheet,'A:'+CONFIG.DATA_FETCH_END_COL);
+    entryState.dataValues=vals||[];*/
+    /*replace above*/    
+    const vals=await fetchSheetDataCached(entryState.targetSheet);
+entryState.dataValues=vals||[];
+    /* naya* replace */
     entryState.filteredIdxs=[];
     for(let i=0;i<entryState.dataValues.length;i++){
       const r=entryState.dataValues[i]||[];
