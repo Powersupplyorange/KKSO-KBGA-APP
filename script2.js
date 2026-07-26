@@ -826,8 +826,12 @@ async function applyViewConfig(idx){
   if(!sheetName){document.getElementById('viewOutput').innerHTML='<div class="panel" style="color:red">No data sheet configured</div>';return}
   try{
     document.getElementById('viewOutput').innerHTML='<div class="panel">Loading...</div>';
-    const[vals,forms]=await Promise.all([fetchSheet(sheetName,'A:'+CONFIG.DATA_FETCH_END_COL),fetchSheetFormulas(sheetName,'A:'+CONFIG.DATA_FETCH_END_COL)]);
-    viewState.dataValues=vals||[];viewState.dataFormulas=forms||[];
+    /*const[vals,forms]=await Promise.all([fetchSheet(sheetName,'A:'+CONFIG.DATA_FETCH_END_COL),fetchSheetFormulas(sheetName,'A:'+CONFIG.DATA_FETCH_END_COL)]);
+    viewState.dataValues=vals||[];viewState.dataFormulas=forms||[];*/
+    /*change above as below*/
+    const[vals,forms]=await Promise.all([fetchSheetDataCached(sheetName),fetchSheetFormulasCached(sheetName)]);
+viewState.dataValues=vals||[];viewState.dataFormulas=forms||[];
+    /* Change */
     viewState.filteredIdxs=[];
     for(let i=0;i<viewState.dataValues.length;i++){
       const r=viewState.dataValues[i]||[];
