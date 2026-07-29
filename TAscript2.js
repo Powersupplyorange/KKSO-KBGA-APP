@@ -174,7 +174,14 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
-    target: "August-2026",
+    
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+      target: "August-2026",
     data: {
       SerialNo: '',
       NameOfEmployee: fldName.value,
@@ -189,13 +196,7 @@ async function handleSubmit(e) {
       BookedBy: fldBookedBy.value,
       SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
     }
-  };
-
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+  })  
     });
     if (!response.ok) throw new Error('Network error: ' + response.status);
     alert('TA submitted successfully.');
