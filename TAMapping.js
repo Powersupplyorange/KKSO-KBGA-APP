@@ -1,9 +1,7 @@
 // ===== TAMapping.js =====
 // Keys use USER_NAME format (uppercase, spaces -> underscore)
 const TAMapping = {
-  "RAJESH_KUMAR": { Designation: "SSE",        Rates: 500 },
-  "AMIT_SINGH":   { Designation: "JE",         Rates: 450 },
-  "SUNIL_SHARMA": { Designation: "TECHNICIAN", Rates: 350 }
+  const "RAVI_KUMAR_MALHOTRA" = {Designation: "TECH-I", PF_No: "52229800571",Mob_No: "9821567620", Bill_Unit: "2201-225", Basic_Pay: "₹29,200", Scale: "L-5", Date_Of_Appointment: "30-07-2020" ,Rates: "625"}
   // add more employees...
 };
 
@@ -15,9 +13,7 @@ const TAExcStation = ["ITARSI", "BINA"];
 
 // "Booked By" dropdown options
 const BookSupervisor = [
-  "SHRI A.K. VERMA (SSE)",
-  "SHRI R.P. GUPTA (SSE/PWI)",
-  "SHRI M.K. JAIN (JE)"
+"NARENDRA EKKA", "KISHOR KUMAR", "MD. AMIR ANSARI", "ARPAN MONDAL", "RAJA MANDAL"
 ];
 
 // Current month sheet name e.g. "Jun-2026"
