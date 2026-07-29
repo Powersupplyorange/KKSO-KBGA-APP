@@ -36,7 +36,10 @@ const TAStations = [
 
 
 // Stations that always give 30% TA irrespective of hours
-const TAExcStation = ["ITARSI", "BINA"];
+const TAExcStation = [
+  "KBST (BARUN SENGUPTA)",
+  "KBGA (BELEGHATA)"
+  ];
 
 // "Booked By" dropdown options
 const BookSupervisor = [
