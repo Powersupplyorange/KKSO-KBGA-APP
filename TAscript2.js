@@ -173,16 +173,16 @@ async function handleSubmit(e) {
   const dateFormatted = formatDateDMY(new Date(fldDate.value));
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
-  const payload = {
+
     
 
   try {
-    const response = await fetch(WORKER_URL, {
+    const response = await fetch("https://keyps.powersupplyorange.workers.dev", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
       target: "August-2026",
-    data: {
+      data: {
       SerialNo: '',
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
