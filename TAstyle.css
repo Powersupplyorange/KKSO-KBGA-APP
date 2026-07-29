@@ -1,0 +1,61 @@
+* { box-sizing: border-box; }
+body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f2f2f2; }
+
+.sticky-header {
+  position: sticky; top:0; z-index:100;
+  display:flex; background:#1a3c6e;
+}
+.tab-btn {
+  flex:1; padding:14px 0; border:none; background:#1a3c6e;
+  color:#fff; font-size:16px; font-weight:bold; cursor:pointer;
+}
+.tab-btn.active { background:#ffab00; color:#000; }
+
+.page { display:none; padding:12px; max-width:600px; margin:0 auto; }
+.page.active { display:block; }
+
+#taForm { display:flex; flex-wrap:wrap; gap:10px; }
+
+.field-group { flex:1 1 45%; display:flex; flex-direction:column; position:relative; }
+.field-group.full-width { flex:1 1 100%; }
+
+.field-group label { font-weight:bold; margin-bottom:4px; font-size:14px; }
+
+.field-group input, .field-group select, .field-group textarea {
+  padding:10px; font-weight:bold; border:1px solid #999; border-radius:6px;
+  background:#ffe0e0; font-size:15px;
+}
+.field-group textarea { min-height:60px; resize:vertical; }
+
+.field-group.filled input,
+.field-group.filled select,
+.field-group.filled textarea { background:#d4f7d4; }
+
+.field-group.filled::after {
+  content:"✔"; position:absolute; top:2px; right:8px; font-size:11px;
+  color:green; background:#fff; border-radius:50%; padding:1px 4px;
+}
+
+#submitBtn {
+  flex:1 1 100%; padding:14px; background:#1a3c6e; color:#fff;
+  font-weight:bold; font-size:16px; border:none; border-radius:8px; margin-top:10px;
+}
+
+.view-toolbar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.view-toolbar select, .view-toolbar button {
+  flex:1; padding:10px; font-weight:bold; border-radius:6px; border:1px solid #999;
+}
+.view-toolbar button { background:#1a3c6e; color:#fff; border:none; }
+
+.summary { display:flex; gap:8px; margin-bottom:12px; }
+.summary-box {
+  flex:1; background:#fff; padding:10px; border-radius:6px;
+  font-weight:bold; text-align:center; border:1px solid #ccc;
+}
+
+.table-wrapper { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; background:#fff; }
+th, td { border:1px solid #ccc; padding:6px 8px; font-size:12px; white-space:nowrap; }
+th { background:#1a3c6e; color:#fff; }
+
+@media (max-width:480px) { .field-group { flex:1 1 100%; } }
