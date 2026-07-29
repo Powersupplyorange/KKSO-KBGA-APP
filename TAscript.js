@@ -174,7 +174,7 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
-    target: targetMonth,
+    target: "August-2026",
     data: {
       SerialNo: '',
       NameOfEmployee: fldName.value,
