@@ -198,7 +198,7 @@ async function handleSubmit(e) {
     }
   })  
     });
-    /*if (!response.ok) throw new Error('Network error: ' + response.status);
+    if (!response.ok) throw new Error('Network error: ' + response.status);
     alert('TA submitted successfully.');
     resetEntryForm();
   } catch (err) {
@@ -207,24 +207,8 @@ async function handleSubmit(e) {
   } finally {
     submitBtn.disabled = false; submitBtn.textContent = 'Submit';
   }
-}*/
-const result = await response.json();
+}
 
-    if (result.success) {
-      submitStatus.className = 'ok';
-      submitStatus.textContent = '✅ Data submitted successfully!';
-      
-    } else {
-      submitStatus.className = 'err';
-      submitStatus.textContent = '❌ Error: ' + result.error;
-    }
-  } catch (err) {
-    submitStatus.className = 'err';
-    submitStatus.textContent = '❌ Submission failed. Please try again.';
-    console.error(err);
-  } finally {
-    SubmitBtn.disabled = false;
-  }
     
 function resetEntryForm() {
   fldObject.value = ''; fldLeft.value = ''; fldArrived.value = '';
