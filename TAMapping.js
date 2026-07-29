@@ -6,7 +6,34 @@ const TAMapping = {
 };
 
 // "To" dropdown options
-const TAStations = ["KKSO", "ITARSI", "BHOPAL", "NAGPUR", "JABALPUR", "BINA"];
+const TAStations = [
+  "KBST (BARUN SENGUPTA)",
+  "KBGA (BELEGHATA)",
+  "KGKG (GAUR KISHOR GHOSH)",
+  "KNLN (NALBAN)",
+  "KITC (IT CENTRE)",
+  "KNBG (NABADIGANTA)",
+  "KNLT (NAZRUL TIRTHA)",
+  "KSPB (SWAPANBHOR)",
+  "KBCC (BISWA BANGLA C.C)",
+  "KSST (SHIKSHA TIRTHA)",
+  "KMWM (MOTHER'S WAX MUSEUM)",
+  "KECP (ECO PARK)",
+  "KMBP (MANGAL DEEP)",
+  "KCCT (CITY CENTER 2)",
+  "KCNP (CHINAR PARK)",
+  "KVIR (VIP ROAD)",
+  "KJHD (JAI HIND)",
+  "KPSK (PARK STREET-METRO BHAWAN)",
+  "KCWC (CHANDNI CHOWK)",
+  "KNOA (NOAPARA)",
+  "KMJH (MAJHERHAT)",
+  "CPD (CENTRAL PARK DEPOT)",
+  "KJPK (JATIN DAS PARK)",
+  "KCEN (CENTRAL)",
+  "SDHM (SEALDAH METRO)"
+];
+
 
 // Stations that always give 30% TA irrespective of hours
 const TAExcStation = ["ITARSI", "BINA"];
