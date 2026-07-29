@@ -208,22 +208,24 @@ async function handleSubmit(e) {
     submitBtn.disabled = false; submitBtn.textContent = 'Submit';
   }
 }*/
+const result = await response.json();
 
- if (result.success) {
- submitStatus.className = 'ok';
- submitStatus.textContent = '✅ Data submitted successfully!';
- setTimeout(() => { showEntry(); }, 1400);
- } else {
- submitStatus.className = 'err';
- submitStatus.textContent = '❌ Error: ' + result.error;
- }
- } catch (err) {
- submitStatus.className = 'err';
- submitStatus.textContent = '❌ Submission failed. Please try again.';
- console.error(err);
- } finally {
- btnSubmit.disabled = false;
+    if (result.success) {
+      submitStatus.className = 'ok';
+      submitStatus.textContent = '✅ Data submitted successfully!';
+      
+    } else {
+      submitStatus.className = 'err';
+      submitStatus.textContent = '❌ Error: ' + result.error;
+    }
+  } catch (err) {
+    submitStatus.className = 'err';
+    submitStatus.textContent = '❌ Submission failed. Please try again.';
+    console.error(err);
+  } finally {
+    SubmitBtn.disabled = false;
   }
+    
 function resetEntryForm() {
   fldObject.value = ''; fldLeft.value = ''; fldArrived.value = '';
   fldTo.value = ''; fldTA.value = ''; fldBookedBy.value = '';
