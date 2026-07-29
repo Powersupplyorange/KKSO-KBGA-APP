@@ -193,10 +193,7 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
   
 
-  const now = new Date();
-  const timeStamp = formatDateDMY(now) + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  const dateFormatted = formatDateDMY(new Date(fldDate.value));
-  const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+  
 
 
     
