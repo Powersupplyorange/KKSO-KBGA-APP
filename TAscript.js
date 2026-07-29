@@ -185,7 +185,7 @@ async function handleSubmit(e) {
       ArrivedTime: fldArrived.value,
       From: fldFrom.value,
       To: fldTo.value,
-      "%TA": fldTA.value,
+      TA: fldTA.value,
       BookedBy: fldBookedBy.value,
       SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
     }
