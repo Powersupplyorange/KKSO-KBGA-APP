@@ -216,7 +216,7 @@ function resetEntryForm() {
 }
 
 // ===================================================================
-// VIEW PAGE LOGIC
+// VIEW PAGE LOGIC  (FIXED: reads columns by fixed position, not header text)
 // ===================================================================
 let currentFilteredData = [];
 
@@ -228,6 +228,24 @@ const totalAmountEl = document.getElementById('totalAmount');
 const viewStatus    = document.getElementById('viewStatus');
 const viewTableBody = document.getElementById('viewTableBody');
 let viewListenersAttached = false;
+
+// ---- Fixed column order (matches the Entry-page POST payload) ----
+// A            B                C             D      E                F         G            H     I    J     K
+// SerialNo  NameOfEmployee   Designation   Date   ObjectOfJourney  LeftTime  ArrivedTime  From   To  %TA  BookedBy
+const COL = {
+  SerialNo: 0,
+  NameOfEmployee: 1,
+  Designation: 2,
+  Date: 3,
+  ObjectOfJourney: 4,
+  LeftTime: 5,
+  ArrivedTime: 6,
+  From: 7,
+  To: 8,
+  TA: 9,
+  BookedBy: 10
+};
+const TOTAL_COLS = 11; // A..K
 
 function populateMonthSelect() {
   const months = (typeof TAMonths !== 'undefined') ? TAMonths : [];
@@ -246,12 +264,11 @@ function setStatus(msg, isError) {
   viewStatus.style.color = isError ? 'red' : '#333';
 }
 
-// IMPORTANT FIX: explicit range "SheetName!A:Z" so Sheets API always returns full data
 async function fetchSheetData(sheetName) {
-  const range = `${sheetName}!A:Z`;
+  const range = `${sheetName}!A:K`; // explicit A to K
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
 
-  console.log('Fetching URL:', url); // helpful for debugging in browser console
+  console.log('Fetching URL:', url);
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -263,30 +280,35 @@ async function fetchSheetData(sheetName) {
   return json.values || [];
 }
 
-function normalizeKey(k) {
-  return k.toString().trim().replace(/\s+/g, '').replace('%', '').toUpperCase();
+// Pad every row to TOTAL_COLS length so trailing-empty-cell truncation
+// (Google Sheets API drops empty cells at end of row) never shifts data.
+function padRow(row) {
+  const padded = row.slice(0, TOTAL_COLS);
+  while (padded.length < TOTAL_COLS) padded.push('');
+  return padded;
 }
 
+// Convert raw rows into objects using FIXED POSITIONS (ignores header text completely)
 function rowsToObjects(rows) {
-  if (!rows || rows.length === 0) return [];
-  const headers = rows[0];
-  return rows.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = row[i] !== undefined ? row[i] : '';
-      obj[normalizeKey(h)] = row[i] !== undefined ? row[i] : ''; // normalized alias
-    });
-    return obj;
-  });
-}
+  if (!rows || rows.length <= 1) return []; // need header + at least 1 data row
+  const dataRows = rows.slice(1); // skip header row (row 0)
 
-function getField(row, ...possibleNames) {
-  for (const name of possibleNames) {
-    if (row[name] !== undefined && row[name] !== '') return row[name];
-    const norm = normalizeKey(name);
-    if (row[norm] !== undefined) return row[norm];
-  }
-  return '';
+  return dataRows
+    .map(padRow)
+    .filter(r => r[COL.SerialNo] !== '' || r[COL.NameOfEmployee] !== '') // skip fully blank rows
+    .map(r => ({
+      SerialNo: r[COL.SerialNo],
+      NameOfEmployee: r[COL.NameOfEmployee],
+      Designation: r[COL.Designation],
+      Date: r[COL.Date],
+      ObjectOfJourney: r[COL.ObjectOfJourney],
+      LeftTime: r[COL.LeftTime],
+      ArrivedTime: r[COL.ArrivedTime],
+      From: r[COL.From],
+      To: r[COL.To],
+      TA: r[COL.TA],
+      BookedBy: r[COL.BookedBy]
+    }));
 }
 
 async function loadViewData() {
@@ -302,16 +324,17 @@ async function loadViewData() {
     const rows = await fetchSheetData(sheetName);
 
     if (!rows || rows.length === 0) {
-      setStatus('No data found in sheet "' + sheetName + '". (Sheet may be empty or name mismatch.)', true);
+      setStatus('No data found in sheet "' + sheetName + '".', true);
       return;
     }
 
     const objects = rowsToObjects(rows);
 
-    const filtered = objects.filter(o => {
-      const nameVal = getField(o, 'NameOfEmployee', 'Name Of Employee', 'NAME');
-      return nameVal.toString().trim().toUpperCase() === displayName;
-    });
+    // ---- Filter strictly by logged-in USER NAME ----
+    const targetName = displayName.trim().toUpperCase();
+    const filtered = objects.filter(o =>
+      (o.NameOfEmployee || '').toString().trim().toUpperCase() === targetName
+    );
 
     currentFilteredData = filtered;
     renderTable(filtered);
@@ -329,17 +352,17 @@ function renderTable(data) {
   data.forEach(row => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${getField(row,'SerialNo','SNo')}</td>
-      <td>${getField(row,'NameOfEmployee','Name Of Employee')}</td>
-      <td>${getField(row,'Designation')}</td>
-      <td>${getField(row,'Date')}</td>
-      <td>${getField(row,'ObjectOfJourney','Object Of Journey')}</td>
-      <td>${getField(row,'LeftTime','Left Time')}</td>
-      <td>${getField(row,'ArrivedTime','Arrived Time')}</td>
-      <td>${getField(row,'From')}</td>
-      <td>${getField(row,'To')}</td>
-      <td>${getField(row,'%TA','TA')}</td>
-      <td>${getField(row,'BookedBy','Booked By')}</td>`;
+      <td>${row.SerialNo}</td>
+      <td>${row.NameOfEmployee}</td>
+      <td>${row.Designation}</td>
+      <td>${row.Date}</td>
+      <td>${row.ObjectOfJourney}</td>
+      <td>${row.LeftTime}</td>
+      <td>${row.ArrivedTime}</td>
+      <td>${row.From}</td>
+      <td>${row.To}</td>
+      <td>${row.TA}</td>
+      <td>${row.BookedBy}</td>`;
     viewTableBody.appendChild(tr);
   });
 }
@@ -350,8 +373,7 @@ function renderSummary(data) {
 
   let totalAmount = 0;
   data.forEach(row => {
-    const pctRaw = getField(row, '%TA', 'TA');
-    const pct = parseFloat((pctRaw || '0').toString().replace('%','')) || 0;
+    const pct = parseFloat((row.TA || '0').toString().replace('%', '')) || 0;
     totalAmount += (pct / 100) * rate;
   });
 
@@ -361,14 +383,9 @@ function renderSummary(data) {
 
 function generatePDF() {
   // ================= FUTURE PDF INTEGRATION =================
-  // 1. Add a PDF library, e.g.:
-  //    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  // 2. Build printable HTML inside hidden #pdf-template div (index.html)
-  //    using 'currentFilteredData':
-  //      const tmpl = document.getElementById('pdf-template');
-  //      tmpl.innerHTML = buildPrescribedHtml(currentFilteredData);
-  // 3. Generate & download:
-  //      html2pdf().from(tmpl).set({ filename: 'TA_Report.pdf' }).save();
+  // 1. Add: <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  // 2. Build printable HTML into #pdf-template using currentFilteredData
+  // 3. html2pdf().from(document.getElementById('pdf-template')).set({filename:'TA_Report.pdf'}).save();
   // =============================================================
   alert('PDF download feature will be integrated soon.');
 }
