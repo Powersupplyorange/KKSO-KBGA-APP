@@ -160,7 +160,6 @@ function allFieldsFilled() {
           fldFrom, fldTo, fldTA, fldBookedBy].every(isFilled);
 }
 
-async function handleSubmit(e) {
 // ---------- Submit message helper (replaces alert) ----------
 const submitMessageEl = document.getElementById('submitMessage');
 let submitMessageTimer = null;
@@ -179,6 +178,7 @@ function showSubmitMessage(text, type) {
 async function handleSubmit(e) {
   e.preventDefault();
   refreshAllFieldStatus();
+
   if (!allFieldsFilled()) {
     showSubmitMessage('⚠️ Please fill all fields before submitting.', 'error');
     return;
@@ -191,20 +191,10 @@ async function handleSubmit(e) {
   const timeStamp = formatDateDMY(now) + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
   const dateFormatted = formatDateDMY(new Date(fldDate.value));
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
-  
 
-  
-
-
-    
-
-  try {
-    const response = await fetch("https://keyps.powersupplyorange.workers.dev", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-      target: "August-2026",
-      data: {
+  const payload = {
+    target: "August-2026",
+    data: {
       SerialNo: '',
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
@@ -214,11 +204,17 @@ async function handleSubmit(e) {
       ArrivedTime: fldArrived.value,
       From: fldFrom.value,
       To: fldTo.value,
-      TA: fldTA.value,
+      "%TA": fldTA.value,
       BookedBy: fldBookedBy.value,
       SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
     }
-  })  
+  };
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error('Network error: ' + response.status);
 
