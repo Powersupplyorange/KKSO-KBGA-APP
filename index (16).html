@@ -15,59 +15,59 @@
 
 <!-- ================= ENTRY PAGE ================= -->
 <main id="entryPage" class="page active">
-  <form id="taForm" autocomplete="off">
+  <form id="taForm" class="form-grid" autocomplete="off">
 
-    <div class="field-group" id="grp-name">
+    <div class="field-group half" id="grp-name">
       <label for="fldName">Name Of Employee</label>
       <input type="text" id="fldName" readonly>
     </div>
 
-    <div class="field-group" id="grp-designation">
+    <div class="field-group half" id="grp-designation">
       <label for="fldDesignation">Designation</label>
       <input type="text" id="fldDesignation" readonly>
     </div>
 
-    <div class="field-group" id="grp-date">
+    <div class="field-group full-width" id="grp-date">
       <label for="fldDate">Date</label>
       <input type="date" id="fldDate">
     </div>
 
     <div class="field-group full-width" id="grp-object">
       <label for="fldObject">Object Of Journey</label>
-      <textarea id="fldObject" rows="2"></textarea>
+      <textarea id="fldObject" rows="3"></textarea>
     </div>
 
-    <div class="field-group" id="grp-left">
+    <div class="field-group half" id="grp-left">
       <label for="fldLeft">Left Time</label>
       <input type="time" id="fldLeft">
     </div>
 
-    <div class="field-group" id="grp-arrived">
+    <div class="field-group half" id="grp-arrived">
       <label for="fldArrived">Arrived Time</label>
       <input type="time" id="fldArrived">
     </div>
 
-    <div class="field-group" id="grp-from">
+    <div class="field-group half" id="grp-from">
       <label for="fldFrom">From</label>
       <input type="text" id="fldFrom" value="KKSO" readonly>
     </div>
 
-    <div class="field-group" id="grp-to">
+    <div class="field-group half" id="grp-to">
       <label for="fldTo">To</label>
       <select id="fldTo"><option value="">-- Select Station --</option></select>
     </div>
 
-    <div class="field-group" id="grp-ta">
+    <div class="field-group half" id="grp-ta">
       <label for="fldTA">%TA</label>
       <input type="text" id="fldTA" readonly>
     </div>
 
-    <div class="field-group" id="grp-bookedby">
+    <div class="field-group half" id="grp-bookedby">
       <label for="fldBookedBy">Booked By</label>
       <select id="fldBookedBy"><option value="">-- Select Supervisor --</option></select>
     </div>
 
-    <button type="submit" id="submitBtn">Submit</button>
+    <button type="submit" id="submitBtn" class="full-width">Submit</button>
   </form>
 </main>
 
@@ -101,15 +101,13 @@
 
   <!-- ============ PDF TEMPLATE PLACEHOLDER (future use) ============
        Reserved hidden container for future PDF generation.
-       See generatePDF() in view.js for integration steps.
+       See generatePDF() in script.js for integration steps.
   ================================================================== -->
   <div id="pdf-template" style="display:none;"></div>
 
 </main>
 
 <script src="TAMapping.js"></script>
-<script src="TAapp.js"></script>
-<script src="TAentry.js"></script>
-<script src="TAview.js"></script>
+<script src="TAscript.js"></script>
 </body>
 </html>
