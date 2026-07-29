@@ -1,7 +1,7 @@
 // ===== TAMapping.js =====
 // Keys use USER_NAME format (uppercase, spaces -> underscore)
 const TAMapping = {
-  const "RAVI_KUMAR_MALHOTRA" = {Designation: "TECH-I", PF_No: "52229800571",Mob_No: "9821567620", Bill_Unit: "2201-225", Basic_Pay: "₹29,200", Scale: "L-5", Date_Of_Appointment: "30-07-2020" ,Rates: "625"}
+  const "RAVI_KUMAR_MALHOTRA": {Designation: "TECH-I", PF_No: "52229800571",Mob_No: "9821567620", Bill_Unit: "2201-225", Basic_Pay: "₹29,200", Scale: "L-5", Date_Of_Appointment: "30-07-2020" ,Rates: "625"}
   // add more employees...
 };
 
