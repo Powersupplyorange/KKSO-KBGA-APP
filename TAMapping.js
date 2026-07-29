@@ -13,7 +13,11 @@ const TAExcStation = ["ITARSI", "BINA"];
 
 // "Booked By" dropdown options
 const BookSupervisor = [
-"NARENDRA EKKA", "KISHOR KUMAR", "MD. AMIR ANSARI", "ARPAN MONDAL", "RAJA MANDAL"
+"NARENDRA EKKA", 
+"KISHOR KUMAR", 
+"MD. AMIR ANSARI", 
+"ARPAN MONDAL", 
+"RAJA MANDAL"
 ];
 
 // Current month sheet name e.g. "Jun-2026"
