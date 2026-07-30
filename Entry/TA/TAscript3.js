@@ -408,7 +408,7 @@ function generatePDF() {
   // 2. Build printable HTML into #pdf-template using currentFilteredData
   // 3. html2pdf().from(document.getElementById('pdf-template')).set({filename:'TA_Report.pdf'}).save();
   // =============================================================
-  alert('PDF download feature will be integrated soon.');
+  //alert('PDF download feature will be integrated soon.');
 }
 
 function initView() {
