@@ -69,7 +69,9 @@ function initEntryForm() {
   fldDesignation.value = employeeData.Designation || '';
 
   const today = new Date();
-  const minD = new Date(today); minD.setDate(today.getDate() - 1);
+  const minD = new Date(today); if (today.getDate() > 1) {
+  minD.setDate(today.getDate() - 1);
+  }
   const maxD = new Date(today); maxD.setDate(today.getDate() + 0);
   fldDate.min = formatDateYMD(minD);
   fldDate.max = formatDateYMD(maxD);
