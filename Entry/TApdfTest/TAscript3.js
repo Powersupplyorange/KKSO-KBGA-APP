@@ -405,12 +405,7 @@ function renderSummary(data) {
 }
 
 function generatePDF() {
-  // ================= FUTURE PDF INTEGRATION =================
-  // 1. Add: <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  // 2. Build printable HTML into #pdf-template using currentFilteredData
-  // 3. html2pdf().from(document.getElementById('pdf-template')).set({filename:'TA_Report.pdf'}).save();
-  // =============================================================
-  //alert('PDF download feature will be integrated soon.');
+  generateAndOpenTAPdf();
 }
 
 function initView() {
