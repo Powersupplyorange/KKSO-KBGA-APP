@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TA Entry / View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="TAstyle2.css">
+</head>
+<body>
+
+<header class="sticky-header">
+  <div class="app-title">🚉 TA MANAGEMENT SYSTEM</div>
+  <div class="tab-bar">
+    <button id="btnEntry" class="tab-btn active">📝 Entry</button>
+    <button id="btnView" class="tab-btn">📊 View</button>
+  </div>
+</header>
+
+<!-- ================= ENTRY PAGE ================= -->
+<main id="entryPage" class="page active">
+  <div class="card">
+    <form id="taForm" class="form-grid" autocomplete="off">
+
+      <div class="field-group half" id="grp-name">
+        <label for="fldName">Name Of Employee</label>
+        <input type="text" id="fldName" readonly>
+      </div>
+
+      <div class="field-group half" id="grp-designation">
+        <label for="fldDesignation">Designation</label>
+        <input type="text" id="fldDesignation" readonly>
+      </div>
+
+      <div class="field-group full-width" id="grp-date">
+        <label for="fldDate">Date</label>
+        <input type="date" id="fldDate">
+      </div>
+
+      <div class="field-group full-width" id="grp-object">
+        <label for="fldObject">Object Of Journey</label>
+        <textarea id="fldObject" rows="3"></textarea>
+      </div>
+
+      <div class="field-group half" id="grp-left">
+        <label for="fldLeft">Left Time</label>
+        <input type="time" id="fldLeft">
+      </div>
+
+      <div class="field-group half" id="grp-arrived">
+        <label for="fldArrived">Arrived Time</label>
+        <input type="time" id="fldArrived">
+      </div>
+
+      <div class="field-group half" id="grp-from">
+        <label for="fldFrom">From</label>
+        <input type="text" id="fldFrom" value="KKSO" readonly>
+      </div>
+
+      <div class="field-group half" id="grp-to">
+        <label for="fldTo">To</label>
+        <select id="fldTo"><option value="">-- Select Station --</option></select>
+      </div>
+
+      <div class="field-group half" id="grp-ta">
+        <label for="fldTA">%TA</label>
+        <input type="text" id="fldTA" readonly>
+      </div>
+
+      <div class="field-group half" id="grp-bookedby">
+        <label for="fldBookedBy">Booked By</label>
+        <select id="fldBookedBy"><option value="">-- Select Supervisor --</option></select>
+      </div>
+
+      <button type="submit" id="submitBtn" class="full-width">🚀 Submit</button>
+
+      <div id="submitMessage" class="submit-message full-width"></div>
+    </form>
+  </div>
+</main>
+
+<!-- ================= VIEW PAGE ================= -->
+<main id="viewPage" class="page">
+  <div class="card">
+    <div class="view-toolbar">
+      <select id="monthSelect"></select>
+      <button id="refreshBtn">🔄 Refresh</button>
+      <button id="downloadBtn">⬇️ Download</button>
+    </div>
+
+    <div class="summary">
+      <div class="summary-box box-ta">
+        <span class="summary-label">Total TA</span>
+        <span class="summary-value" id="totalTA">0</span>
+      </div>
+      <div class="summary-box box-amount">
+        <span class="summary-label">Total Amount</span>
+        <span class="summary-value" id="totalAmount">0</span>
+      </div>
+    </div>
+
+    <div id="viewStatus"></div>
+
+    <div class="table-wrapper">
+      <table id="viewTable">
+        <thead>
+          <tr>
+            <th>SNo</th><th>Name</th><th>Designation</th><th>Date</th>
+            <th>Object</th><th>Left</th><th>Arrived</th><th>From</th>
+            <th>To</th><th>%TA</th><th>Booked By</th>
+          </tr>
+        </thead>
+        <tbody id="viewTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- PDF template placeholder (future use) -->
+    <div id="pdf-template" style="display:none;"></div>
+  </div>
+</main>
+
+<script src="TAMapping.js"></script>
+<script src="TAscript3.js"></script>
+</body>
+</html>
