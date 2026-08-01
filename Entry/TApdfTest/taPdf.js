@@ -36,8 +36,10 @@ function taExtractCode(fullText) {
   return fullText.split('(')[0].trim();
 }
 
-// ---------- "No. of Train" logic ----------
-function taComputeNoOfTrain(toFullText, dateObj, arrivedMinutes) {
+// ---------- "No. of Train" logic (CORRECTED) ----------
+// Uses raw Left Time (row 1) OR raw Arrived Time final (row 2) — either one
+// falling inside 08:00-20:00 on a weekday qualifies as Metro.
+function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
   const code = taExtractCode(toFullText);
   if (!code) return '';
 
@@ -49,13 +51,16 @@ function taComputeNoOfTrain(toFullText, dateObj, arrivedMinutes) {
   if (restricted.includes(code)) {
     const dow = dateObj.getDay(); // 0=Sun..6=Sat
     const isWeekday = dow >= 1 && dow <= 5;
-    const withinHours = arrivedMinutes >= 480 && arrivedMinutes <= 1200; // 08:00-20:00
-    return (isWeekday && withinHours) ? '-By Metro-' : '-By Car-';
+
+    const inWindow = (mins) => mins >= 480 && mins <= 1200; // 08:00-20:00
+    const eitherInWindow = inWindow(leftMin) || inWindow(finalArrivedMin);
+
+    return (isWeekday && eitherInWindow) ? '-By Metro-' : '-By Car-';
   }
   return '-By Car-';
 }
 
-// ---------- Build one trip (out + return) from one sheet row ----------
+// ---------- Build one trip (out + return) from one sheet row (CORRECTED CALL) ----------
 function taBuildTrip(row) {
   const dateObj = taParseDMY(row.Date);
   const leftMin = taTimeToMinutes(row.LeftTime);
@@ -69,7 +74,9 @@ function taBuildTrip(row) {
   const outArrivedStr = taMinutesToHHMM(outArrivedMin);
   const fromCode = taExtractCode(row.From);
   const toCode   = taExtractCode(row.To);
-  const noOfTrain = taComputeNoOfTrain(row.To, dateObj, ((outArrivedMin % 1440) + 1440) % 1440);
+
+  // ✅ FIXED: now checks raw LeftTime AND raw final ArrivedTime (not computed arrival)
+  const noOfTrain = taComputeNoOfTrain(row.To, dateObj, leftMin, finalArrivedMin);
 
   // Return
   const retLeftMin = finalArrivedMin - travelMinutes;
