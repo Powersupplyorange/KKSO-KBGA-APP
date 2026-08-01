@@ -72,8 +72,10 @@ const BookSupervisor = [
 "RAJA MANDAL"
 ];
 
-const stationTime = {
-  
+// ---- Travel time in MINUTES from KKSO to each station ----
+// Used to compute "Time Arrived" (going) & "Time Left" (return) in the PDF.
+// ⚠️ MUST have an entry for EVERY station in TAStations, or it defaults to 0.
+const stationTime = { 
 "KBST (BARUN SENGUPTA)": 20,
 "KBGA (BELEGHATA)": 23,
 "KGKG (GAUR KISHOR GHOSH)": 30,
@@ -100,6 +102,16 @@ const stationTime = {
 "KCEN (CENTRAL)": 40,
 "SDHM (SEALDAH METRO)": 60
 };
+
+
+// Stations where "No. of Train" depends on weekday + arrival-time window (use CODE only)
+const TATimeRestrictedStations = ["KBST", "KBGA"];
+
+// Stations where "No. of Train" is ALWAYS "-By Metro-" (use CODE only)
+const TAUnrestrictedMetroStations = [
+  "KPSK", "KCWC", "KNOA", "KMJH", "CPD", "KJPK", "KCEN", "SDHM"
+];
+
 // ---- Fixed month-sheet names (matches your actual Google Sheet tabs) ----
 const MONTH_NAMES_FULL = [
   "January", "February", "March", "April", "May", "June",
