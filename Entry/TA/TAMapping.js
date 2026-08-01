@@ -72,7 +72,34 @@ const BookSupervisor = [
 "RAJA MANDAL"
 ];
 
-
+const stationTime = {
+  
+"KBST (BARUN SENGUPTA)": 20,
+"KBGA (BELEGHATA)": 23,
+"KGKG (GAUR KISHOR GHOSH)": 30,
+"KNLN (NALBAN)": 35,
+"KITC (IT CENTRE)": 45,
+"KNBG (NABADIGANTA)": 50,
+"KNLT (NAZRUL TIRTHA)": 55,
+"KSPB (SWAPANBHOR)": 60,
+"KBCC (BISWA BANGLA C.C)": 65,
+"KSST (SHIKSHA TIRTHA)": 70,
+"KMWM (MOTHER'S WAX MUSEUM)": 75,
+"KECP (ECO PARK)": 80,
+"KMBP (MANGAL DEEP)": 85,
+"KCCT (CITY CENTER 2)": 90,
+"KCNP (CHINAR PARK)": 95,
+"KVIR (VIP ROAD)": 100,
+"KJHD (JAI HIND)": 105,
+"KPSK (PARK STREET-METRO BHAWAN)": 60,
+"KCWC (CHANDNI CHOWK)": 70,
+"KNOA (NOAPARA)": 80,
+"KMJH (MAJHERHAT)": 90,
+"CPD (CENTRAL PARK DEPOT)": 120,
+"KJPK (JATIN DAS PARK)": 30,
+"KCEN (CENTRAL)": 40,
+"SDHM (SEALDAH METRO)": 60
+};
 // ---- Fixed month-sheet names (matches your actual Google Sheet tabs) ----
 const MONTH_NAMES_FULL = [
   "January", "February", "March", "April", "May", "June",
