@@ -548,12 +548,13 @@ async function downloadTAPdfDirect() {
       downloadBtnEl.disabled = false;
       downloadBtnEl.textContent = '⬇️ Download';
     }
-    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are included in your HTML or loaded via CDN.', 'error');
+    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are included.', 'error');
     return;
   }
 
   if (downloadBtnEl) downloadBtnEl.textContent = '⏳ Generating PDF...';
 
+  // Create loading overlay
   const spinnerOverlay = document.createElement('div');
   spinnerOverlay.id = 'pdf-generating-overlay';
   spinnerOverlay.style.cssText = `
@@ -589,15 +590,17 @@ async function downloadTAPdfDirect() {
 
     const bodyHtml = taBuildAllPages(trips, header);
 
+    // Render HTML inside off-screen container
     container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
     container.style.cssText = `
-      display:block; position:fixed; top:0; left:0;
-      width:1123px; background:#fff; z-index:9998;
-      overflow:visible; margin:0; padding:0;
+      position: fixed; left: -9999px; top: 0;
+      width: 1123px; background: #fff; z-index: -1;
+      overflow: visible; margin: 0; padding: 0;
     `;
 
-    // Wait 100ms for DOM layout rendering before capturing canvas
-    await new Promise(r => setTimeout(r, 100));
+    // Force browser reflow to compute heights before canvas capture
+    void container.offsetHeight;
+    await new Promise(r => setTimeout(r, 200));
 
     const pageEls = container.querySelectorAll('.page');
     if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
@@ -612,25 +615,41 @@ async function downloadTAPdfDirect() {
     for (let i = 0; i < pageEls.length; i++) {
       progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
 
-      const canvas = await html2canvas(pageEls[i], {
+      const pageEl = pageEls[i];
+
+      const canvas = await html2canvas(pageEl, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
+        logging: false,
         windowWidth: 1123
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Guard against 0 dimensions
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        console.warn(`Page ${i + 1} produced zero dimensions. Skipping page.`);
+        continue;
+      }
 
       let renderW = MAX_W;
       let renderH = (canvas.height * renderW) / canvas.width;
+
       if (renderH > MAX_H) {
         const scale = MAX_H / renderH;
         renderH = MAX_H;
         renderW = renderW * scale;
       }
 
-      const xOffset = MARGIN + (MAX_W - renderW) / 2;
-      const yOffset = MARGIN;
+      let xOffset = MARGIN + (MAX_W - renderW) / 2;
+      let yOffset = MARGIN;
+
+      // Sanitize inputs for jsPDF
+      renderW = Number.isFinite(renderW) && renderW > 0 ? renderW : MAX_W;
+      renderH = Number.isFinite(renderH) && renderH > 0 ? renderH : MAX_H;
+      xOffset = Number.isFinite(xOffset) ? xOffset : MARGIN;
+      yOffset = Number.isFinite(yOffset) ? yOffset : MARGIN;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       if (i > 0) pdf.addPage('a4', 'landscape');
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
@@ -640,7 +659,7 @@ async function downloadTAPdfDirect() {
     const nameVal = typeof displayName !== 'undefined' ? displayName : 'User';
     const safeMonth = monthVal.replace(/\s+/g, '_');
     const safeName = nameVal.replace(/\s+/g, '_');
-    
+
     pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
 
   } catch (err) {
@@ -648,8 +667,8 @@ async function downloadTAPdfDirect() {
     await taAlert('PDF generation failed: ' + (err.message || err), 'error');
   } finally {
     if (container) {
-      container.style.display = 'none';
       container.innerHTML = '';
+      container.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 1123px;';
     }
     if (spinnerOverlay) spinnerOverlay.remove();
     if (downloadBtnEl) {
