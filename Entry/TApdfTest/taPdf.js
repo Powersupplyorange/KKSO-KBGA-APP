@@ -489,14 +489,17 @@ function generateAndOpenTAPdf() {
 }
 // ===================== DIRECT PDF DOWNLOAD (no print dialog) — FIXED VERSION =====================
 
-// Waits (up to ~4s) for html2pdf to finish loading via the CDN-fallback loader in index.html
-function waitForHtml2Pdf(maxWaitMs = 4000) {
+// ===================== DIRECT PDF DOWNLOAD (html2canvas + jsPDF — reliable version) =====================
+
+function waitForPdfLibs(maxWaitMs = 5000) {
   return new Promise((resolve) => {
     const start = Date.now();
     (function check() {
-      if (typeof html2pdf !== 'undefined') return resolve(true);
-      if (window.__html2pdfLoaded === false) return resolve(false); // all sources failed
-      if (Date.now() - start > maxWaitMs) return resolve(typeof html2pdf !== 'undefined');
+      const canvasReady = (typeof html2canvas !== 'undefined');
+      const jsPdfReady = (window.jspdf && typeof window.jspdf.jsPDF !== 'undefined');
+      if (canvasReady && jsPdfReady) return resolve(true);
+      if (window.__html2canvasLoaded === false || window.__jsPDFLoaded === false) return resolve(false);
+      if (Date.now() - start > maxWaitMs) return resolve(canvasReady && jsPdfReady);
       setTimeout(check, 150);
     })();
   });
@@ -512,12 +515,11 @@ async function downloadTAPdfDirect() {
   downloadBtnEl.disabled = true;
   downloadBtnEl.textContent = '⏳ Loading PDF engine...';
 
-  const ready = await waitForHtml2Pdf();
+  const ready = await waitForPdfLibs();
   if (!ready) {
     downloadBtnEl.disabled = false;
     downloadBtnEl.textContent = '⬇️ Download';
-    await showAppAlert('PDF engine could not be loaded (no internet or blocked). Opening print-preview instead — use "Save as PDF" there.', 'error');
-    generateAndOpenTAPdf();
+    await showAppAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are uploaded in the same folder as index.html, or check your internet connection.', 'error');
     return;
   }
 
@@ -540,21 +542,14 @@ async function downloadTAPdfDirect() {
 
   const bodyHtml = taBuildAllPages(trips, header);
 
-  // ---- FIX: render as a VISIBLE full-screen overlay (not off-screen) ----
-  // Off-screen negative positioning (left:-99999px) can cause html2canvas to
-  // mis-measure width/height on mobile browsers. A visible overlay (behind a
-  // "Generating..." spinner) renders identically to a normal on-screen element,
-  // which html2canvas captures reliably on all devices.
   const container = document.getElementById('pdf-template');
   container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
   container.style.cssText = `
     display:block; position:fixed; top:0; left:0;
-    width:1063px; background:#fff; z-index:9998;
+    width:1123px; background:#fff; z-index:9998;
     overflow:visible; margin:0; padding:0;
   `;
 
-  // Loading spinner overlay on top, so the user sees a clean "Generating..." screen
-  // instead of the raw unstyled A4 layout flashing by.
   const spinnerOverlay = document.createElement('div');
   spinnerOverlay.id = 'pdf-generating-overlay';
   spinnerOverlay.style.cssText = `
@@ -565,34 +560,56 @@ async function downloadTAPdfDirect() {
   `;
   spinnerOverlay.innerHTML = `
     <div style="font-size:40px; margin-bottom:12px;">⏳</div>
-    <div style="font-size:15px; font-weight:700;">Generating PDF, please wait...</div>
+    <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
   `;
   document.body.appendChild(spinnerOverlay);
-
-  const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
-  const safeName = displayName.replace(/\s+/g, '_');
-
-  const opt = {
-    margin: 8,
-    filename: `TA_${safeName}_${safeMonth}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      letterRendering: true,
-      windowWidth: 1200,          // FIX: forces desktop-width rendering regardless of mobile viewport
-      scrollX: 0,
-      scrollY: 0
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
+  const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
 
   try {
-    await html2pdf().set(opt).from(container).save();
+    const pageEls = container.querySelectorAll('.page');
+    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+    const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
+    const MAX_W = PAGE_W - MARGIN * 2;   // 281
+    const MAX_H = PAGE_H - MARGIN * 2;   // 194
+
+    for (let i = 0; i < pageEls.length; i++) {
+      progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
+
+      const canvas = await html2canvas(pageEls[i], {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: 1123
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      let renderW = MAX_W;
+      let renderH = (canvas.height * renderW) / canvas.width;
+      if (renderH > MAX_H) {
+        const scale = MAX_H / renderH;
+        renderH = MAX_H;
+        renderW = renderW * scale;
+      }
+
+      const xOffset = MARGIN + (MAX_W - renderW) / 2;
+      const yOffset = MARGIN;
+
+      if (i > 0) pdf.addPage('a4', 'landscape');
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
+    }
+
+    const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
+    const safeName = displayName.replace(/\s+/g, '_');
+    pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
+
   } catch (err) {
     console.error('PDF generation failed:', err);
-    await showAppAlert('PDF generation failed. Please try again or use Print instead.', 'error');
+    await showAppAlert('PDF generation failed: ' + (err.message || err), 'error');
   } finally {
     container.style.display = 'none';
     container.innerHTML = '';
