@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TA Entry / View</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="TAstyle2.css">
@@ -120,7 +119,30 @@
     <div id="pdf-template" style="display:none;"></div>
   </div>
 </main>
+<!-- Remove the old broken <script src="https://cdnjs.dev/..."> line and replace with this -->
+<script>
+  // Tries multiple CDNs in order; sets window.__html2pdfLoaded = true/false when done
+  (function loadHtml2Pdf(sources, index) {
+    if (index >= sources.length) {
+      console.error('All html2pdf CDN sources failed to load.');
+      window.__html2pdfLoaded = false;
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = sources[index];
+    script.onload = () => { window.__html2pdfLoaded = true; console.log('html2pdf loaded from:', sources[index]); };
+    script.onerror = () => { console.warn('Failed to load html2pdf from:', sources[index]); loadHtml2Pdf(sources, index + 1); };
+    document.head.appendChild(script);
+  })([
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+    'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
+    './html2pdf.bundle.min.js' // local fallback — see self-hosting note below
+  ], 0);
+</script>
 
+<script src="TAMapping.js"></script>
+<script src="taPdf.js"></script>
+<script src="script.js"></script>
 <script src="TAMapping.js"></script>
 <script src="taPdf.js"></script>
 <script src="TAscript3.js"></script>
