@@ -560,13 +560,10 @@ async function downloadTAPdfDirect() {
       return da - db;
     });
 
-    console.log('Total rows to process:', sorted.length);
-
     const trips = sorted.map((row, i) => taBuildTrip(row, i)).filter(t => t !== null);
-    console.log('Successfully built trips:', trips.length, 'of', sorted.length);
 
     if (trips.length === 0) {
-      await showAppAlert('Could not process any rows from the data. Please check the Date/Time formats in your sheet, or open console (F12) for details.', 'error');
+      await showAppAlert('Could not process any rows from the data. Check Date/Time formats in your sheet.', 'error');
       return;
     }
 
@@ -578,9 +575,7 @@ async function downloadTAPdfDirect() {
       appointmentDate: employeeData.Date_Of_Appointment || ''
     };
 
-    console.log('Building HTML pages...');
     const bodyHtml = taBuildAllPages(trips, header);
-    console.log('HTML built successfully, length:', bodyHtml.length);
 
     container = document.getElementById('pdf-template');
     if (!container) throw new Error('#pdf-template container not found in index.html');
@@ -598,7 +593,7 @@ async function downloadTAPdfDirect() {
       position:fixed; top:0; left:0; width:100%; height:100%;
       background:rgba(26,26,46,0.92); z-index:9999;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      color:#fff; font-family:Arial, sans-serif;
+      color:#fff; font-family:Arial, sans-serif; text-align:center; padding:20px;
     `;
     spinnerOverlay.innerHTML = `
       <div style="font-size:40px; margin-bottom:12px;">⏳</div>
@@ -608,8 +603,7 @@ async function downloadTAPdfDirect() {
     const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
 
     const pageEls = container.querySelectorAll('.page');
-    console.log('Number of .page elements found:', pageEls.length);
-    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found in container).');
+    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
@@ -618,15 +612,13 @@ async function downloadTAPdfDirect() {
     const MAX_W = PAGE_W - MARGIN * 2;
     const MAX_H = PAGE_H - MARGIN * 2;
 
+    // ---- STEP 1: Build the entire PDF in memory (can take as long as needed) ----
     for (let i = 0; i < pageEls.length; i++) {
       progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
-      console.log('Rendering page', i + 1, 'of', pageEls.length);
 
       const canvas = await html2canvas(pageEls[i], {
         scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1123
       });
-
-      console.log('Page', i + 1, 'canvas size:', canvas.width, 'x', canvas.height);
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
@@ -645,19 +637,70 @@ async function downloadTAPdfDirect() {
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
     }
 
+    container.style.display = 'none';
+    container.innerHTML = '';
+
     const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
     const safeName = displayName.replace(/\s+/g, '_');
-    console.log('Saving PDF as:', `TA_${safeName}_${safeMonth}.pdf`);
-    pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
-    console.log('PDF save() called successfully.');
+    const fileName = `TA_${safeName}_${safeMonth}.pdf`;
+
+    // ---- STEP 2: PDF is fully ready in memory. Now show a FRESH tap-to-save button. ----
+    // This is critical: the original button tap's "gesture" has expired after all
+    // the async waiting above. Browsers/WebViews require the actual save/download
+    // to happen INSTANTLY inside a real, fresh click — so we ask for one more tap here.
+    spinnerOverlay.innerHTML = `
+      <div style="font-size:46px; margin-bottom:14px;">✅</div>
+      <div style="font-size:15px; font-weight:700; margin-bottom:20px;">
+        Your PDF is ready!
+      </div>
+      <button id="pdf-final-save-btn" style="
+        padding:14px 32px; font-size:16px; font-weight:800; color:#fff;
+        background:linear-gradient(135deg,#06d6a0,#0a7a3c); border:none;
+        border-radius:12px; cursor:pointer; box-shadow:0 8px 20px rgba(6,214,160,0.4);
+      ">⬇️ Tap Here to Save PDF</button>
+      <div style="font-size:12px; margin-top:16px; opacity:0.8; max-width:280px;">
+        If nothing happens after tapping, your device will open the PDF in a new tab instead — use its own Download/Share button there.
+      </div>
+    `;
+
+    document.getElementById('pdf-final-save-btn').addEventListener('click', function () {
+      try {
+        // Primary attempt: direct save (works in normal browsers)
+        pdf.save(fileName);
+      } catch (e) {
+        console.warn('pdf.save() failed, falling back to blob/new-tab method:', e);
+      }
+
+      // Fallback (also runs alongside, harmless if save() already worked):
+      // Opens the PDF as a blob URL in a new tab — WebViews typically hand this
+      // off to the system's default browser/PDF viewer, where downloading works normally.
+      try {
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+      } catch (e2) {
+        console.error('Fallback blob download also failed:', e2);
+      }
+
+      spinnerOverlay.remove();
+      downloadBtnEl.disabled = false;
+      downloadBtnEl.textContent = '⬇️ Download';
+    });
 
   } catch (err) {
     console.error('downloadTAPdfDirect FAILED:', err);
-    await showAppAlert('PDF generation failed:\n\n' + (err.message || err) + '\n\n(Check browser console for full details)', 'error');
-  } finally {
-    if (container) { container.style.display = 'none'; container.innerHTML = ''; }
     if (spinnerOverlay) spinnerOverlay.remove();
+    if (container) { container.style.display = 'none'; container.innerHTML = ''; }
     downloadBtnEl.disabled = false;
     downloadBtnEl.textContent = '⬇️ Download';
+    await showAppAlert('PDF generation failed:\n\n' + (err.message || err), 'error');
   }
-          }
+}
