@@ -61,6 +61,20 @@ function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
 }
 
 // ---------- Build one trip (out + return) from one sheet row (CORRECTED CALL) ----------
+// FIX #6: uppercase + conditional suffix, avoiding duplicate suffix if already present
+function taFormatObjectText(objectText) {
+  const excluded = (typeof TAObjectSuffixExcludedUsers !== 'undefined') ? TAObjectSuffixExcludedUsers : [];
+  let text = (objectText || '').toString().trim().toUpperCase();
+
+  const suffix = 'BOOKED BY SSE/M/KKSO';
+  const alreadyHasSuffix = text.endsWith(suffix);
+
+  if (!excluded.includes(lookupKey) && !alreadyHasSuffix) {
+    text = text + ' ' + suffix;
+  }
+  return text;
+}
+
 function taBuildTrip(row) {
   const dateObj = taParseDMY(row.Date);
   const leftMin = taTimeToMinutes(row.LeftTime);
@@ -69,22 +83,18 @@ function taBuildTrip(row) {
   const travelMinutes = (typeof stationTime !== 'undefined' && stationTime[row.To] !== undefined)
     ? stationTime[row.To] : (console.warn('Missing stationTime for:', row.To), 0);
 
-  // Going
   const outArrivedMin = leftMin + travelMinutes;
   const outArrivedStr = taMinutesToHHMM(outArrivedMin);
   const fromCode = taExtractCode(row.From);
   const toCode   = taExtractCode(row.To);
 
-  // ✅ FIXED: now checks raw LeftTime AND raw final ArrivedTime (not computed arrival)
   const noOfTrain = taComputeNoOfTrain(row.To, dateObj, leftMin, finalArrivedMin);
 
-  // Return
   const retLeftMin = finalArrivedMin - travelMinutes;
   const retLeftStr = taMinutesToHHMM(retLeftMin);
   const retArrivedStr = row.ArrivedTime;
   const nextDay = finalArrivedMin < leftMin;
 
-  // Rate/Rs/P
   const rate = (typeof employeeData !== 'undefined' && employeeData.Rates) ? parseFloat(employeeData.Rates) : 0;
   const pct = parseFloat((row.TA || '0').toString().replace('%', '')) || 0;
   const amount = rate * pct / 100;
@@ -95,7 +105,9 @@ function taBuildTrip(row) {
     dateObj, dateStr: row.Date, train: noOfTrain,
     out: { left: row.LeftTime, arrived: outArrivedStr, from: fromCode, to: toCode },
     ret: { left: retLeftStr, arrived: retArrivedStr, from: toCode, to: fromCode },
-    nextDay, days: row.TA, object: row.ObjectOfJourney, rate, rs, p
+    nextDay, days: row.TA,
+    object: taFormatObjectText(row.ObjectOfJourney), // ✅ uppercase + suffix applied
+    rate, rs, p
   };
 }
 
@@ -165,7 +177,7 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
 
   if (!isFirstPage) {
     html += `
-      <tr>
+      <tr class="bf-row">
         <td></td><td></td><td></td><td></td><td></td><td></td>
         <td class="km-cell">${taKmPatternFor(false, idx++)}</td>
         <td rowspan="2"></td><td rowspan="2"></td>
@@ -173,7 +185,7 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
         <td rowspan="2">${pageObj.bf.rs}</td>
         <td rowspan="2">${String(pageObj.bf.p).padStart(2,'0')}</td>
       </tr>
-      <tr>
+      <tr class="bf-row">
         <td></td><td></td><td></td><td></td><td></td><td></td>
         <td class="km-cell">${taKmPatternFor(false, idx++)}</td>
       </tr>`;
@@ -186,9 +198,19 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
     const kmB = taKmPatternFor(isFirstPage, idx++);
 
     if (!trip) {
+      // FIX #3: use rowspan="2" for cols 8-12 even when blank,
+      // so row2 always has the correct number of covered columns (12 total)
       html += `
-        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td class="km-cell">${kmA}</td><td></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td class="km-cell">${kmB}</td></tr>`;
+        <tr>
+          <td></td><td></td><td></td><td></td><td></td><td></td>
+          <td class="km-cell">${kmA}</td>
+          <td rowspan="2"></td><td rowspan="2"></td><td rowspan="2"></td>
+          <td rowspan="2"></td><td rowspan="2"></td>
+        </tr>
+        <tr>
+          <td></td><td></td><td></td><td></td><td></td><td></td>
+          <td class="km-cell">${kmB}</td>
+        </tr>`;
       continue;
     }
 
@@ -217,6 +239,7 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
   }
   return html;
 }
+
 
 // ---------- Page HTML builders ----------
 function taBuildHeaderBlock(h) {
@@ -263,11 +286,12 @@ function taBuildTableHead() {
 }
 
 function taBuildColgroup(isFirstPage) {
+  // Both variants now sum to exactly 281mm (matches .page/table width precisely)
   return isFirstPage ? `
     <colgroup>
       <col style="width:24mm"><col style="width:20mm"><col style="width:16mm">
       <col style="width:16mm"><col style="width:20mm"><col style="width:20mm">
-      <col style="width:12mm"><col style="width:12mm"><col style="width:90mm">
+      <col style="width:12mm"><col style="width:16mm"><col style="width:97mm">
       <col style="width:14mm"><col style="width:14mm"><col style="width:12mm">
     </colgroup>` : `
     <colgroup>
@@ -368,35 +392,62 @@ function taBuildFullDocument(bodyHtml) {
 <style>
   @page { size: A4 landscape; margin: 8mm; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #000; background: #ddd; margin: 0; }
-  .page { width: 297mm; min-height: 210mm; background: #fff; margin: 1px 1px; padding: 1mm; position: relative; page-break-after: always; }
-  .page:last-child { page-break-after: auto; }
-  .top-right { text-align: right; font-size: 11px; line-height: 1.4; font-weight: bold; }
-  .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 4px 0 2px 0; }
-  .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 14px; margin: 0 0 10px 0; }
-  .info-container { padding: 0 100px; margin-bottom: 8px; }
+  html, body { margin:0; padding:0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #000; background: #ddd; }
+
+  /* FIX #1 & #2: .page now matches the ACTUAL printable area (297-16=281mm x 210-16=194mm),
+     not the full physical sheet. This removes left/right asymmetry AND prevents
+     content from overflowing into extra blank pages. */
+  .page {
+    width: 281mm;
+    max-height: 194mm;
+    margin: 0 auto 4mm auto;
+    background: #fff;
+    padding: 0;
+    position: relative;
+    page-break-after: always;
+    overflow: hidden; /* safety net: clip instead of spilling a blank page */
+  }
+  .page:last-child { page-break-after: auto; margin-bottom:0; }
+
+  .top-right { text-align: right; font-size: 10.5px; line-height: 1.3; font-weight: bold; }
+  .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 3px 0 1px 0; }
+  .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 14px; margin: 0 0 6px 0; }
+  .info-container { padding: 0 100px; margin-bottom: 4px; }
   .info-table { width: 100%; border-collapse: collapse; }
-  .info-table td { padding: 3px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
+  .info-table td { padding: 2px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
   .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
+
   table.ta-table { width: 281mm; border-collapse: collapse; table-layout: fixed; }
   table.ta-table th, table.ta-table td { border: 1px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 9.3px; word-wrap: break-word; }
   table.ta-table th { font-weight: bold; background: #f2f2f2; }
-  table.ta-table thead tr { height: 7mm; }
-  table.ta-table tbody tr { height: 8.9mm; }
-  .object-col { text-align: left !important; }
+  table.ta-table thead tr { height: 6mm; }
+  table.ta-table tbody tr { height: 7.8mm; } /* trimmed for safe vertical fit */
+
+  /* FIX #6: Object column left-aligned, vertically centered, uppercase */
+  .object-col { text-align: left !important; text-transform: uppercase; }
   .km-cell { font-weight: bold; }
-  .cert-block { margin-top: 18px; font-size: 11px; line-height: 1.6; text-align: justify; padding: 0 8px; }
-  .signrow { display: flex; justify-content: space-between; margin-top: 45px; font-size: 11px; font-weight: bold; }
-  .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 4px; }
+
+  /* FIX #4: B/F, C/F and Total Rupees always bold */
+  tfoot td { font-weight: bold; }
+  .bf-row td { font-weight: bold; }
+
+  /* FIX #5: compact C/F row (no extra empty row) */
+  .cf-row td { padding: 2px 4px; }
+
+  .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
+  .signrow { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; font-weight: bold; }
+  .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
   .signrow div span.label { display:block; text-decoration: underline; }
-  .notes { margin-top: 22px; font-size: 10px; line-height: 1.5; }
+  .notes { margin-top: 12px; font-size: 10px; line-height: 1.35; }
   .total-words-text { font-size: 10.5px; }
+
   .print-btn { position: fixed; top: 10px; left: 10px; z-index: 999; padding: 8px 14px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
   .print-btn:hover { background: #1d4ed8; }
-  @media print { body { background: #fff; } .page { margin: 0; } .print-btn { display: none; } }
+  @media print { body { background: #fff; } .page { margin: 0 auto; } .print-btn { display: none; } }
 </style></head>
 <body>
-<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF (select "Landscape" if not auto-selected)</button>
 ${bodyHtml}
 </body></html>`;
 }
