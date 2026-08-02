@@ -1,29 +1,17 @@
-// ===================== taPdf.js (FIXED — defensive error handling) =====================
+// ===================== taPdf.js (VECTOR PDF — no html2canvas, no hanging) =====================
 
 // ---------- date/time helpers ----------
 function taParseDMY(dateStr) {
-  if (!dateStr || typeof dateStr !== 'string') {
-    console.warn('taParseDMY: invalid/empty date input:', dateStr);
-    return null;
-  }
+  if (!dateStr || typeof dateStr !== 'string') return null;
   const parts = dateStr.trim().split('-');
-  if (parts.length !== 3) {
-    console.warn('taParseDMY: unexpected date format:', dateStr);
-    return null;
-  }
+  if (parts.length !== 3) return null;
   const d = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10);
   let y = parseInt(parts[2], 10);
-  if (isNaN(d) || isNaN(m) || isNaN(y)) {
-    console.warn('taParseDMY: non-numeric date parts:', dateStr);
-    return null;
-  }
+  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
   if (y < 100) y = 2000 + y;
   const dt = new Date(y, m - 1, d);
-  if (isNaN(dt.getTime())) {
-    console.warn('taParseDMY: resulted in Invalid Date:', dateStr);
-    return null;
-  }
+  if (isNaN(dt.getTime())) return null;
   return dt;
 }
 
@@ -52,18 +40,16 @@ function taExtractCode(fullText) {
   return fullText.split('(')[0].trim();
 }
 
-// ---------- "No. of Train" logic ----------
 function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
   const code = taExtractCode(toFullText);
   if (!code) return '';
-
   const unrestricted = (typeof TAUnrestrictedMetroStations !== 'undefined') ? TAUnrestrictedMetroStations : [];
   const restricted   = (typeof TATimeRestrictedStations !== 'undefined') ? TATimeRestrictedStations : [];
 
   if (unrestricted.includes(code)) return '-By Metro-';
 
   if (restricted.includes(code)) {
-    if (!dateObj) return '-By Car-'; // safe fallback if date couldn't be parsed
+    if (!dateObj) return '-By Car-';
     const dow = dateObj.getDay();
     const isWeekday = dow >= 1 && dow <= 5;
     const inWindow = (mins) => mins >= 480 && mins <= 1200;
@@ -73,7 +59,6 @@ function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
   return '-By Car-';
 }
 
-// ---------- Object of Journey formatting ----------
 function taFormatObjectText(objectText) {
   const excluded = (typeof TAObjectSuffixExcludedUsers !== 'undefined') ? TAObjectSuffixExcludedUsers : [];
   let text = (objectText || '').toString().trim().toUpperCase();
@@ -85,7 +70,6 @@ function taFormatObjectText(objectText) {
   return text;
 }
 
-// ---------- Build one trip from one sheet row (DEFENSIVE) ----------
 function taBuildTrip(row, rowIndex) {
   try {
     const dateObj = taParseDMY(row.Date);
@@ -93,14 +77,12 @@ function taBuildTrip(row, rowIndex) {
     const finalArrivedMin = taTimeToMinutes(row.ArrivedTime);
 
     const travelMinutes = (typeof stationTime !== 'undefined' && stationTime[row.To] !== undefined)
-      ? stationTime[row.To]
-      : (console.warn('Row', rowIndex, '- Missing stationTime for:', row.To, '- using 0 minutes'), 0);
+      ? stationTime[row.To] : 0;
 
     const outArrivedMin = leftMin + travelMinutes;
     const outArrivedStr = taMinutesToHHMM(outArrivedMin);
     const fromCode = taExtractCode(row.From);
     const toCode   = taExtractCode(row.To);
-
     const noOfTrain = taComputeNoOfTrain(row.To, dateObj, leftMin, finalArrivedMin);
 
     const retLeftMin = finalArrivedMin - travelMinutes;
@@ -114,16 +96,10 @@ function taBuildTrip(row, rowIndex) {
     const rs = Math.floor(amount + 1e-6);
     const p  = Math.round((amount - rs) * 100);
 
-    // Fallback date object for row2 calculation if original date failed to parse
     const safeDateObj = dateObj || new Date();
-    if (!dateObj) {
-      console.warn('Row', rowIndex, '- Date could not be parsed ("' + row.Date + '"), using today as fallback for internal calculation only. Displayed date will remain as-is.');
-    }
 
     return {
-      dateObj: safeDateObj,
-      dateStr: row.Date || '',
-      train: noOfTrain,
+      dateObj: safeDateObj, dateStr: row.Date || '', train: noOfTrain,
       out: { left: row.LeftTime || '', arrived: outArrivedStr, from: fromCode, to: toCode },
       ret: { left: retLeftStr, arrived: retArrivedStr, from: toCode, to: fromCode },
       nextDay, days: row.TA || '',
@@ -132,16 +108,14 @@ function taBuildTrip(row, rowIndex) {
     };
   } catch (err) {
     console.error('Failed to build trip for row', rowIndex, row, err);
-    return null; // caller will filter these out
+    return null;
   }
 }
 
-// ---------- Pagination ----------
 function taPaginateTrips(trips) {
   const pages = [];
   const page1 = trips.slice(0, 7);
   pages.push({ type: 'first', trips: page1 });
-
   let idx = page1.length, remaining = trips.length - idx;
   if (remaining <= 0) {
     pages.push({ type: 'final', trips: [] });
@@ -162,7 +136,6 @@ function taSumAmounts(trips) {
   return { rs, p };
 }
 
-// ---------- Number to words ----------
 function taNumberToWords(num) {
   if (num === 0) return 'Zero';
   const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
@@ -170,7 +143,6 @@ function taNumberToWords(num) {
   const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
   const two = n => n < 20 ? a[n] : b[Math.floor(n/10)] + (n%10 ? ' ' + a[n%10] : '');
   const three = n => { let s=''; if(n>=100){s+=a[Math.floor(n/100)]+' Hundred'; n%=100; if(n) s+=' ';} if(n>0) s+=two(n); return s; };
-
   let result = '';
   const crore = Math.floor(num/10000000); num %= 10000000;
   const lakh  = Math.floor(num/100000);   num %= 100000;
@@ -188,371 +160,295 @@ function taAmountToWords(rs, p) {
   return words + ' Only';
 }
 
-// ---------- KM decorative pattern ----------
+// ===================== VECTOR PDF DRAWING (jsPDF only — no html2canvas) =====================
+
+const PDF_MARGIN = 8;
+const PDF_PAGE_W = 297, PDF_PAGE_H = 210;
+const PDF_TABLE_W = 281;
+const PDF_COL_WIDTHS = [24, 20, 16, 16, 20, 20, 12, 16, 97, 14, 14, 12]; // sum = 281
+const ROW_H = 8;
+const MERGED_H = ROW_H * 2;
+
 const KM_PATTERN_PAGE1 = ['A','B','O','V','E','','08','','K','M','','','',''];
 const KM_PATTERN_OTHER = ['','','A','B','O','V','E','','08','','K','M','',''];
-function taKmPatternFor(isFirstPage, idx) {
-  return (isFirstPage ? KM_PATTERN_PAGE1 : KM_PATTERN_OTHER)[idx] || '';
+
+function pdfColX(index) {
+  let x = PDF_MARGIN;
+  for (let i = 0; i < index; i++) x += PDF_COL_WIDTHS[i];
+  return x;
 }
 
-// ---------- Row rendering ----------
-function taRenderRowsForPage(pageObj, isFirstPage) {
-  let html = '';
-  let idx = 0;
-
-  if (!isFirstPage) {
-    html += `
-      <tr class="bf-row">
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-        <td class="km-cell">${taKmPatternFor(false, idx++)}</td>
-        <td rowspan="2"></td><td rowspan="2"></td>
-        <td rowspan="2">B/F</td>
-        <td rowspan="2">${pageObj.bf.rs}</td>
-        <td rowspan="2">${String(pageObj.bf.p).padStart(2,'0')}</td>
-      </tr>
-      <tr class="bf-row">
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-        <td class="km-cell">${taKmPatternFor(false, idx++)}</td>
-      </tr>`;
-  }
-
-  const maxSets = isFirstPage ? 7 : 6;
-  for (let i = 0; i < maxSets; i++) {
-    const trip = pageObj.trips[i];
-    const kmA = taKmPatternFor(isFirstPage, idx++);
-    const kmB = taKmPatternFor(isFirstPage, idx++);
-
-    if (!trip) {
-      html += `
-        <tr>
-          <td></td><td></td><td></td><td></td><td></td><td></td>
-          <td class="km-cell">${kmA}</td>
-          <td rowspan="2"></td><td rowspan="2"></td><td rowspan="2"></td>
-          <td rowspan="2"></td><td rowspan="2"></td>
-        </tr>
-        <tr>
-          <td></td><td></td><td></td><td></td><td></td><td></td>
-          <td class="km-cell">${kmB}</td>
-        </tr>`;
-      continue;
-    }
-
-    const row2Date = trip.nextDay
-      ? taFormatDMY(new Date(trip.dateObj.getFullYear(), trip.dateObj.getMonth(), trip.dateObj.getDate() + 1))
-      : '-Do-';
-
-    html += `
-      <tr>
-        <td>${trip.dateStr}</td><td>${trip.train}</td>
-        <td>${trip.out.left}</td><td>${trip.out.arrived}</td>
-        <td>${trip.out.from}</td><td>${trip.out.to}</td>
-        <td class="km-cell">${kmA}</td>
-        <td rowspan="2">${trip.days}</td>
-        <td rowspan="2" class="object-col">${trip.object}</td>
-        <td rowspan="2">${trip.rate}</td>
-        <td rowspan="2">${trip.rs}</td>
-        <td rowspan="2">${String(trip.p).padStart(2,'0')}</td>
-      </tr>
-      <tr>
-        <td>${row2Date}</td><td>-Do-</td>
-        <td>${trip.ret.left}</td><td>${trip.ret.arrived}</td>
-        <td>${trip.ret.from}</td><td>${trip.ret.to}</td>
-        <td class="km-cell">${kmB}</td>
-      </tr>`;
-  }
-  return html;
-}
-
-// ---------- Header block, table head, colgroup ----------
-function taBuildHeaderBlock(h) {
-  return `
-    <div class="top-right">
-      <div>P.F No <span class="field">${h.pfNo}</span></div>
-      <div>Bill Unit <span class="field">${h.billUnit}</span></div>
-      <div>Mob:- <span class="field">${h.mob}</span></div>
-    </div>
-    <p class="title">METRO RAILWAY/KOLKATA</p>
-    <p class="subtitle">TRAVELLING ALLOWANCE JOURNAL</p>
-    <div class="info-container">
-      <table class="info-table">
-        <tr><td><b>ELECTRICAL</b> Branch <b>METRO RAILWAY</b> Division Headquarters at
-          <b>SSE/M/KKSO</b> journal of duty performed by Sri <span class="field" style="min-width:170px;">${h.sri}</span></td></tr>
-        <tr><td>which allowance for <span class="field" style="min-width:170px;">${h.allowanceMonth}</span>
-          Designation <span class="field" style="min-width:170px;">${h.designation}</span>
-          Pay <span class="field" style="min-width:110px;">${h.pay}</span></td></tr>
-        <tr><td>Scale of Pay <span class="field" style="min-width:70px;">${h.scaleOfPay}</span>
-          Date. of. appointment <span class="field" style="min-width:100px;">${h.appointmentDate}</span>
-          Rule by which governed <b>SR.T.A.</b></td></tr>
-      </table>
-    </div>`;
-}
-
-function taBuildTableHead() {
-  return `
-    <thead>
-      <tr>
-        <th rowspan="2">Month &amp;<br>Date</th>
-        <th rowspan="2">No. of<br>Train</th>
-        <th rowspan="2">Time left</th>
-        <th rowspan="2">Time<br>arrived</th>
-        <th colspan="2">Station</th>
-        <th rowspan="2">KMs</th>
-        <th rowspan="2">Days/<br>Night</th>
-        <th rowspan="2">Object of Journey</th>
-        <th rowspan="2">Rate</th>
-        <th rowspan="2">Rs.</th>
-        <th rowspan="2">P.</th>
-      </tr>
-      <tr><th>From</th><th>To</th></tr>
-    </thead>`;
-}
-
-function taBuildColgroup() {
-  return `
-    <colgroup>
-      <col style="width:24mm"><col style="width:20mm"><col style="width:16mm">
-      <col style="width:16mm"><col style="width:20mm"><col style="width:20mm">
-      <col style="width:12mm"><col style="width:16mm"><col style="width:97mm">
-      <col style="width:14mm"><col style="width:14mm"><col style="width:12mm">
-    </colgroup>`;
-}
-
-function taBuildPageDiv(pageNumber, pageObj, header) {
-  const isFirstPage = pageObj.type === 'first';
-  const rowsHtml = taRenderRowsForPage(pageObj, isFirstPage);
-  const headerBlock = isFirstPage ? taBuildHeaderBlock(header) : '';
-
-  let footRow;
-  if (pageObj.type === 'final') {
-    const words = taAmountToWords(pageObj.runningTotal.rs, pageObj.runningTotal.p);
-    footRow = `
-      <tfoot><tr>
-        <td colspan="9" style="text-align:left;" class="total-words-text"><b>Total Rupees:</b> <span>${words}</span></td>
-        <td>Total=</td>
-        <td>${pageObj.runningTotal.rs}</td>
-        <td>${String(pageObj.runningTotal.p).padStart(2,'0')}</td>
-      </tr></tfoot>`;
-  } else {
-    footRow = `
-      <tfoot><tr class="cf-row">
-        <td colspan="9"></td>
-        <td>C/F</td>
-        <td>${pageObj.runningTotal.rs}</td>
-        <td>${String(pageObj.runningTotal.p).padStart(2,'0')}</td>
-      </tr></tfoot>`;
-  }
-
-  const certBlock = pageObj.type === 'final' ? `
-    <div class="cert-block">
-      I hereby certify that. the above mentioned <b>${header.sri}</b>
-      was absent on duty from his Headquarters station during the period
-      charged for in the bill on Railway business and that the officer performed the journey by Rail/Air/sea/Road and
-      was allowed free pass or locomotion at the expenses of Government Local Fund or Indian State. No T.A /D.A or
-      any other remuneration has been drawn from any other source in respect of the journeys performed on duty Pass
-      and also for the halts for which T.A/D.A has been claimed in this bill.
-    </div>
-    <div class="signrow">
-      <div><span class="label">Countersigned</span></div>
-      <div><span class="label">Controlling Officer</span></div>
-      <div><span class="label">Head of Office</span></div>
-      <div><span class="label">Signature of staff claiming T.A.</span></div>
-    </div>
-    <div class="notes"><b>Note: -</b>
-      <ol style="margin:4px 0 0 18px; padding:0;">
-        <li>On T.A. bills of transfer from one railway to another a certificate whether or not a free pass or Locomotion at Government expense was allowed should be recorded.</li>
-        <li>Entries made by the claimant in Hindi/Regional Language should be transliterated in English.</li>
-      </ol>
-    </div>` : '';
-
-  return `
-    <div class="page" id="page${pageNumber}">
-      ${headerBlock}
-      <table class="ta-table" id="table${pageNumber}">
-        ${taBuildColgroup()}
-        ${taBuildTableHead()}
-        <tbody>${rowsHtml}</tbody>
-        ${footRow}
-      </table>
-      ${certBlock}
-    </div>`;
-}
-
-function taBuildAllPages(trips, header) {
-  const pages = taPaginateTrips(trips);
-  let cumulative = { rs: 0, p: 0 };
-  let pageNum = 0;
-
-  return pages.map(pageObj => {
-    pageNum++;
-    if (pageObj.type === 'first') {
-      cumulative = taSumAmounts(pageObj.trips);
-      pageObj.runningTotal = cumulative;
-    } else {
-      pageObj.bf = { ...cumulative };
-      const newSum = taSumAmounts(pageObj.trips);
-      let rs = cumulative.rs + newSum.rs, p = cumulative.p + newSum.p;
-      rs += Math.floor(p / 100); p %= 100;
-      cumulative = { rs, p };
-      pageObj.runningTotal = cumulative;
-    }
-    return taBuildPageDiv(pageNum, pageObj, header);
-  }).join('\n');
-}
-
-// ---------- Shared CSS ----------
-function taGetPdfStyles() {
-  return `
-    * { box-sizing: border-box; }
-    html, body { margin:0; padding:0; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #000; background: #ddd; }
-
-    .page {
-      width: 281mm;
-      margin: 0 auto 4mm auto;
-      background: #fff;
-      padding: 0;
-      position: relative;
-      page-break-after: always;
-    }
-    .page:last-child { page-break-after: auto; margin-bottom:0; }
-
-    .top-right { text-align: right; font-size: 10.5px; line-height: 1.3; font-weight: bold; }
-    .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 3px 0 1px 0; }
-    .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 14px; margin: 0 0 6px 0; }
-    .info-container { padding: 0 100px; margin-bottom: 4px; }
-    .info-table { width: 100%; border-collapse: collapse; }
-    .info-table td { padding: 2px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
-    .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
-
-    table.ta-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      border: 1.2px solid #000;
-    }
-    table.ta-table th, table.ta-table td { border: 1px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 9.3px; word-wrap: break-word; }
-    table.ta-table th { font-weight: bold; background: #f2f2f2; }
-    table.ta-table thead tr { height: 6mm; }
-    table.ta-table tbody tr { height: 7.8mm; }
-
-    .object-col { text-align: left !important; text-transform: uppercase; }
-    .km-cell { font-weight: bold; }
-
-    tfoot td { font-weight: bold; }
-    .bf-row td { font-weight: bold; }
-    .cf-row td { padding: 2px 4px; }
-
-    .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
-    .signrow { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; font-weight: bold; }
-    .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
-    .signrow div span.label { display:block; text-decoration: underline; }
-    .notes { margin-top: 8px; font-size: 10px; line-height: 1.35; }
-    .total-words-text { font-size: 10.5px; }
-
-    .print-btn { position: fixed; top: 10px; left: 10px; z-index: 999; padding: 8px 14px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-    .print-btn:hover { background: #1d4ed8; }
-    @media print { body { background: #fff; } .page { margin: 0 auto; } .print-btn { display: none; } }
-  `;
-}
-
-// ---------- Print-preview method (opens new tab) ----------
-function taBuildFullDocument(bodyHtml) {
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<title>Metro Railway/Kolkata - Travelling Allowance Journal</title>
-<style>
-  @page { size: A4 landscape; margin: 8mm; }
-  ${taGetPdfStyles()}
-</style></head>
-<body>
-<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF (select "Landscape" if not auto-selected)</button>
-${bodyHtml}
-</body></html>`;
-}
-
-function generateAndOpenTAPdf() {
-  try {
-    if (!currentFilteredData || currentFilteredData.length === 0) {
-      showAppAlert('No data available. Please load data on the View page first.', 'error');
-      return;
-    }
-
-    const sorted = [...currentFilteredData].sort((a, b) => {
-      const da = taParseDMY(a.Date), db = taParseDMY(b.Date);
-      if (!da) return 1;
-      if (!db) return -1;
-      return da - db;
-    });
-
-    const trips = sorted.map((row, i) => taBuildTrip(row, i)).filter(t => t !== null);
-
-    if (trips.length === 0) {
-      showAppAlert('Could not process any rows — all had invalid data. Check console (F12) for details.', 'error');
-      return;
-    }
-
-    const header = {
-      pfNo: employeeData.PF_No || '', billUnit: employeeData.Bill_Unit || '',
-      mob: employeeData.Mob_No || '', sri: displayName,
-      allowanceMonth: monthSelect.value, designation: employeeData.Designation || '',
-      pay: employeeData.Basic_Pay || '', scaleOfPay: employeeData.Scale || '',
-      appointmentDate: employeeData.Date_Of_Appointment || ''
-    };
-
-    const bodyHtml = taBuildAllPages(trips, header);
-    const fullDoc = taBuildFullDocument(bodyHtml);
-
-    const pdfWindow = window.open('', '_blank');
-    if (!pdfWindow) {
-      showAppAlert('Popup blocked — please allow popups to generate the PDF.', 'error');
-      return;
-    }
-    pdfWindow.document.open();
-    pdfWindow.document.write(fullDoc);
-    pdfWindow.document.close();
-  } catch (err) {
-    console.error('generateAndOpenTAPdf failed:', err);
-    showAppAlert('Print preview failed: ' + (err.message || err), 'error');
-  }
-}
-
-// ---------- DIRECT PDF DOWNLOAD (html2canvas + jsPDF) — FULLY WRAPPED IN TRY/CATCH ----------
-function waitForPdfLibs(maxWaitMs = 5000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    (function check() {
-      const canvasReady = (typeof html2canvas !== 'undefined');
-      const jsPdfReady = (window.jspdf && typeof window.jspdf.jsPDF !== 'undefined');
-      if (canvasReady && jsPdfReady) return resolve(true);
-      if (window.__html2canvasLoaded === false || window.__jsPDFLoaded === false) return resolve(false);
-      if (Date.now() - start > maxWaitMs) return resolve(canvasReady && jsPdfReady);
-      setTimeout(check, 150);
-    })();
+function pdfCenterCell(pdf, text, x, y, w, h, fontSize, bold) {
+  pdf.setFontSize(fontSize);
+  pdf.setFont(undefined, bold ? 'bold' : 'normal');
+  const lines = String(text || '').split('\n');
+  const lineHeight = fontSize * 0.3528 * 1.15;
+  const totalH = lines.length * lineHeight;
+  let startY = y + h / 2 - totalH / 2 + lineHeight / 2;
+  lines.forEach((ln, i) => {
+    pdf.text(ln, x + w / 2, startY + i * lineHeight, { align: 'center', baseline: 'middle' });
   });
 }
 
-async function downloadTAPdfDirect() {
+function pdfLeftCell(pdf, lines, x, y, w, h, fontSize) {
+  pdf.setFontSize(fontSize);
+  pdf.setFont(undefined, 'normal');
+  const lineHeight = fontSize * 0.3528 * 1.15;
+  const totalH = lines.length * lineHeight;
+  let startY = y + h / 2 - totalH / 2 + lineHeight / 2;
+  lines.forEach((ln, i) => {
+    pdf.text(ln, x, startY + i * lineHeight, { align: 'left', baseline: 'middle' });
+  });
+}
+
+function fitObjectText(pdf, text, colWidthMM, mergedHeightMM) {
+  let fontSize = 7.5;
+  const maxWidth = colWidthMM - 2;
+  const maxHeight = mergedHeightMM - 2;
+  let lines;
+  while (fontSize >= 6) {
+    pdf.setFontSize(fontSize);
+    lines = pdf.splitTextToSize(text || '', maxWidth);
+    const lineHeight = fontSize * 0.3528 * 1.15;
+    if (lines.length * lineHeight <= maxHeight) break;
+    fontSize -= 0.25;
+  }
+  pdf.setFontSize(fontSize);
+  const lineHeight = fontSize * 0.3528 * 1.15;
+  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
+    let last = lines[maxLines - 1];
+    while (pdf.getTextWidth(last + '...') > maxWidth && last.length > 0) {
+      last = last.slice(0, -1);
+    }
+    lines[maxLines - 1] = last + '...';
+  }
+  return { lines, fontSize };
+}
+
+function pdfDrawInfoHeader(pdf, header) {
+  let y = PDF_MARGIN;
+  pdf.setFont(undefined, 'bold'); pdf.setFontSize(10);
+  pdf.text('P.F No  ' + header.pfNo, PDF_PAGE_W - PDF_MARGIN, y + 3, { align: 'right' });
+  pdf.text('Bill Unit  ' + header.billUnit, PDF_PAGE_W - PDF_MARGIN, y + 7, { align: 'right' });
+  pdf.text('Mob:-  ' + header.mob, PDF_PAGE_W - PDF_MARGIN, y + 11, { align: 'right' });
+  y += 14;
+
+  pdf.setFontSize(15);
+  pdf.text('METRO RAILWAY/KOLKATA', PDF_PAGE_W / 2, y, { align: 'center' });
+  y += 6;
+  pdf.setFontSize(11.5);
+  pdf.text('TRAVELLING ALLOWANCE JOURNAL', PDF_PAGE_W / 2, y, { align: 'center' });
+  y += 7;
+
+  pdf.setFontSize(9.5); pdf.setFont(undefined, 'normal');
+  const cx = PDF_PAGE_W / 2;
+  pdf.text('ELECTRICAL Branch  METRO RAILWAY  Division Headquarters at  SSE/M/KKSO  journal of duty performed by Sri  ' + header.sri, cx, y, { align: 'center' });
+  y += 5;
+  pdf.text('which allowance for  ' + header.allowanceMonth + '   Designation  ' + header.designation + '   Pay  ' + header.pay, cx, y, { align: 'center' });
+  y += 5;
+  pdf.text('Scale of Pay  ' + header.scaleOfPay + '   Date of appointment  ' + header.appointmentDate + '   Rule by which governed  SR.T.A.', cx, y, { align: 'center' });
+  y += 5;
+
+  return y;
+}
+
+function pdfDrawTableHeaderAt(pdf, startY) {
+  const row1H = 6, row2H = 5;
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.2);
+  pdf.setFillColor(242, 242, 242);
+
+  const labelMap = { 0: 'Month &\nDate', 1: 'No. of\nTrain', 2: 'Time left', 3: 'Time\narrived', 6: 'KMs', 7: 'Days/\nNight', 8: 'Object of Journey', 9: 'Rate', 10: 'Rs.', 11: 'P.' };
+
+  [0, 1, 2, 3, 6, 7, 8, 9, 10, 11].forEach(ci => {
+    const x = pdfColX(ci), w = PDF_COL_WIDTHS[ci];
+    pdf.rect(x, startY, w, row1H + row2H, 'FD');
+    pdfCenterCell(pdf, labelMap[ci], x, startY, w, row1H + row2H, 8, true);
+  });
+
+  const xFrom = pdfColX(4), stationW = PDF_COL_WIDTHS[4] + PDF_COL_WIDTHS[5];
+  pdf.rect(xFrom, startY, stationW, row1H, 'FD');
+  pdfCenterCell(pdf, 'Station', xFrom, startY, stationW, row1H, 8, true);
+
+  pdf.rect(xFrom, startY + row1H, PDF_COL_WIDTHS[4], row2H, 'FD');
+  pdfCenterCell(pdf, 'From', xFrom, startY + row1H, PDF_COL_WIDTHS[4], row2H, 8, true);
+  const xTo = pdfColX(5);
+  pdf.rect(xTo, startY + row1H, PDF_COL_WIDTHS[5], row2H, 'FD');
+  pdfCenterCell(pdf, 'To', xTo, startY + row1H, PDF_COL_WIDTHS[5], row2H, 8, true);
+
+  return startY + row1H + row2H;
+}
+
+function pdfDrawTripRow(pdf, y, trip, kmA, kmB) {
+  const y2 = y + ROW_H;
+  [0, 1, 2, 3, 4, 5, 6].forEach(ci => {
+    pdf.rect(pdfColX(ci), y, PDF_COL_WIDTHS[ci], ROW_H);
+    pdf.rect(pdfColX(ci), y2, PDF_COL_WIDTHS[ci], ROW_H);
+  });
+  [7, 8, 9, 10, 11].forEach(ci => pdf.rect(pdfColX(ci), y, PDF_COL_WIDTHS[ci], MERGED_H));
+
+  pdfCenterCell(pdf, kmA || '', pdfColX(6), y, PDF_COL_WIDTHS[6], ROW_H, 8, true);
+  pdfCenterCell(pdf, kmB || '', pdfColX(6), y2, PDF_COL_WIDTHS[6], ROW_H, 8, true);
+
+  if (!trip) return;
+
+  pdfCenterCell(pdf, trip.dateStr, pdfColX(0), y, PDF_COL_WIDTHS[0], ROW_H, 8);
+  pdfCenterCell(pdf, trip.train, pdfColX(1), y, PDF_COL_WIDTHS[1], ROW_H, 7.5);
+  pdfCenterCell(pdf, trip.out.left, pdfColX(2), y, PDF_COL_WIDTHS[2], ROW_H, 8);
+  pdfCenterCell(pdf, trip.out.arrived, pdfColX(3), y, PDF_COL_WIDTHS[3], ROW_H, 8);
+  pdfCenterCell(pdf, trip.out.from, pdfColX(4), y, PDF_COL_WIDTHS[4], ROW_H, 8);
+  pdfCenterCell(pdf, trip.out.to, pdfColX(5), y, PDF_COL_WIDTHS[5], ROW_H, 8);
+
+  const row2DateLabel = trip.nextDay
+    ? taFormatDMY(new Date(trip.dateObj.getFullYear(), trip.dateObj.getMonth(), trip.dateObj.getDate() + 1))
+    : '-Do-';
+  pdfCenterCell(pdf, row2DateLabel, pdfColX(0), y2, PDF_COL_WIDTHS[0], ROW_H, 8);
+  pdfCenterCell(pdf, '-Do-', pdfColX(1), y2, PDF_COL_WIDTHS[1], ROW_H, 8);
+  pdfCenterCell(pdf, trip.ret.left, pdfColX(2), y2, PDF_COL_WIDTHS[2], ROW_H, 8);
+  pdfCenterCell(pdf, trip.ret.arrived, pdfColX(3), y2, PDF_COL_WIDTHS[3], ROW_H, 8);
+  pdfCenterCell(pdf, trip.ret.from, pdfColX(4), y2, PDF_COL_WIDTHS[4], ROW_H, 8);
+  pdfCenterCell(pdf, trip.ret.to, pdfColX(5), y2, PDF_COL_WIDTHS[5], ROW_H, 8);
+
+  pdfCenterCell(pdf, trip.days, pdfColX(7), y, PDF_COL_WIDTHS[7], MERGED_H, 8);
+
+  const { lines, fontSize } = fitObjectText(pdf, trip.object, PDF_COL_WIDTHS[8], MERGED_H);
+  pdfLeftCell(pdf, lines, pdfColX(8) + 1, y, PDF_COL_WIDTHS[8] - 2, MERGED_H, fontSize);
+
+  pdfCenterCell(pdf, String(trip.rate), pdfColX(9), y, PDF_COL_WIDTHS[9], MERGED_H, 8);
+  pdfCenterCell(pdf, String(trip.rs), pdfColX(10), y, PDF_COL_WIDTHS[10], MERGED_H, 8);
+  pdfCenterCell(pdf, String(trip.p).padStart(2, '0'), pdfColX(11), y, PDF_COL_WIDTHS[11], MERGED_H, 8);
+}
+
+function pdfDrawBfRow(pdf, y, bf, kmA, kmB) {
+  const y2 = y + ROW_H;
+  [0, 1, 2, 3, 4, 5, 6].forEach(ci => {
+    pdf.rect(pdfColX(ci), y, PDF_COL_WIDTHS[ci], ROW_H);
+    pdf.rect(pdfColX(ci), y2, PDF_COL_WIDTHS[ci], ROW_H);
+  });
+  [7, 8, 9, 10, 11].forEach(ci => pdf.rect(pdfColX(ci), y, PDF_COL_WIDTHS[ci], MERGED_H));
+  pdfCenterCell(pdf, kmA || '', pdfColX(6), y, PDF_COL_WIDTHS[6], ROW_H, 8, true);
+  pdfCenterCell(pdf, kmB || '', pdfColX(6), y2, PDF_COL_WIDTHS[6], ROW_H, 8, true);
+  pdfCenterCell(pdf, 'B/F', pdfColX(9), y, PDF_COL_WIDTHS[9], MERGED_H, 8, true);
+  pdfCenterCell(pdf, String(bf.rs), pdfColX(10), y, PDF_COL_WIDTHS[10], MERGED_H, 8, true);
+  pdfCenterCell(pdf, String(bf.p).padStart(2, '0'), pdfColX(11), y, PDF_COL_WIDTHS[11], MERGED_H, 8, true);
+}
+
+function pdfDrawCfRow(pdf, y, cf) {
+  const h = 6;
+  const xStart = pdfColX(0);
+  const widthSpan = PDF_COL_WIDTHS.slice(0, 9).reduce((a, b) => a + b, 0);
+  pdf.rect(xStart, y, widthSpan, h);
+  pdf.rect(pdfColX(9), y, PDF_COL_WIDTHS[9], h);
+  pdf.rect(pdfColX(10), y, PDF_COL_WIDTHS[10], h);
+  pdf.rect(pdfColX(11), y, PDF_COL_WIDTHS[11], h);
+  pdfCenterCell(pdf, 'C/F', pdfColX(9), y, PDF_COL_WIDTHS[9], h, 8, true);
+  pdfCenterCell(pdf, String(cf.rs), pdfColX(10), y, PDF_COL_WIDTHS[10], h, 8, true);
+  pdfCenterCell(pdf, String(cf.p).padStart(2, '0'), pdfColX(11), y, PDF_COL_WIDTHS[11], h, 8, true);
+  return y + h;
+}
+
+function pdfDrawTotalRow(pdf, y, total, wordsText) {
+  const h = 8;
+  const xStart = pdfColX(0);
+  const widthSpan = PDF_COL_WIDTHS.slice(0, 9).reduce((a, b) => a + b, 0);
+  pdf.rect(xStart, y, widthSpan, h);
+  pdf.rect(pdfColX(9), y, PDF_COL_WIDTHS[9], h);
+  pdf.rect(pdfColX(10), y, PDF_COL_WIDTHS[10], h);
+  pdf.rect(pdfColX(11), y, PDF_COL_WIDTHS[11], h);
+  pdf.setFont(undefined, 'bold'); pdf.setFontSize(9);
+  pdf.text('Total Rupees: ' + wordsText, xStart + 2, y + h / 2, { baseline: 'middle' });
+  pdfCenterCell(pdf, 'Total=', pdfColX(9), y, PDF_COL_WIDTHS[9], h, 8, true);
+  pdfCenterCell(pdf, String(total.rs), pdfColX(10), y, PDF_COL_WIDTHS[10], h, 8, true);
+  pdfCenterCell(pdf, String(total.p).padStart(2, '0'), pdfColX(11), y, PDF_COL_WIDTHS[11], h, 8, true);
+  return y + h;
+}
+
+function pdfDrawCertBlock(pdf, y, header) {
+  pdf.setFont(undefined, 'normal'); pdf.setFontSize(8.5);
+  const certText = `I hereby certify that. the above mentioned ${header.sri} was absent on duty from his Headquarters station during the period charged for in the bill on Railway business and that the officer performed the journey by Rail/Air/sea/Road and was allowed free pass or locomotion at the expenses of Government Local Fund or Indian State. No T.A /D.A or any other remuneration has been drawn from any other source in respect of the journeys performed on duty Pass and also for the halts for which T.A/D.A has been claimed in this bill.`;
+  const lines = pdf.splitTextToSize(certText, PDF_TABLE_W);
+  let cy = y + 5;
+  lines.forEach(ln => { pdf.text(ln, PDF_MARGIN, cy); cy += 3.6; });
+
+  cy += 8;
+  const colW = PDF_TABLE_W / 4;
+  const labels = ['Countersigned', 'Controlling Officer', 'Head of Office', 'Signature of staff claiming T.A.'];
+  labels.forEach((lab, i) => {
+    const lx = PDF_MARGIN + i * colW;
+    pdf.line(lx + 5, cy, lx + colW - 5, cy);
+    pdf.setFont(undefined, 'bold'); pdf.setFontSize(8);
+    pdf.text(lab, lx + colW / 2, cy + 4, { align: 'center' });
+  });
+
+  cy += 12;
+  pdf.setFont(undefined, 'bold'); pdf.setFontSize(8);
+  pdf.text('Note: -', PDF_MARGIN, cy);
+  pdf.setFont(undefined, 'normal');
+  const note1 = pdf.splitTextToSize('1. On T.A. bills of transfer from one railway to another a certificate whether or not a free pass or Locomotion at Government expense was allowed should be recorded.', PDF_TABLE_W - 10);
+  const note2 = pdf.splitTextToSize('2. Entries made by the claimant in Hindi/Regional Language should be transliterated in English.', PDF_TABLE_W - 10);
+  cy += 4;
+  note1.forEach(ln => { pdf.text(ln, PDF_MARGIN + 5, cy); cy += 3.4; });
+  cy += 1;
+  note2.forEach(ln => { pdf.text(ln, PDF_MARGIN + 5, cy); cy += 3.4; });
+
+  return cy;
+}
+
+function taRenderPageVector(pdf, pageObj, header, isFirstPage) {
+  let y = PDF_MARGIN;
+  if (isFirstPage) y = pdfDrawInfoHeader(pdf, header);
+  y = pdfDrawTableHeaderAt(pdf, y);
+
+  let idx = 0;
+  if (!isFirstPage) {
+    pdfDrawBfRow(pdf, y, pageObj.bf, KM_PATTERN_OTHER[idx], KM_PATTERN_OTHER[idx + 1]);
+    idx += 2;
+    y += MERGED_H;
+  }
+
+  const maxSets = isFirstPage ? 7 : 6;
+  const pattern = isFirstPage ? KM_PATTERN_PAGE1 : KM_PATTERN_OTHER;
+  for (let i = 0; i < maxSets; i++) {
+    const trip = pageObj.trips[i] || null;
+    const kmA = pattern[idx++], kmB = pattern[idx++];
+    pdfDrawTripRow(pdf, y, trip, kmA, kmB);
+    y += MERGED_H;
+  }
+
+  if (pageObj.type === 'final') {
+    const words = taAmountToWords(pageObj.runningTotal.rs, pageObj.runningTotal.p);
+    y = pdfDrawTotalRow(pdf, y, pageObj.runningTotal, words);
+    pdfDrawCertBlock(pdf, y, header);
+  } else {
+    pdfDrawCfRow(pdf, y, pageObj.runningTotal);
+  }
+}
+
+// ===================== MAIN DOWNLOAD FUNCTION (synchronous — no hang, no html2canvas) =====================
+
+function isJsPdfReady() {
+  return !!(window.jspdf && typeof window.jspdf.jsPDF !== 'undefined');
+}
+
+function downloadTAPdfDirect() {
   const downloadBtnEl = document.getElementById('downloadBtn');
-  let spinnerOverlay = null;
-  let container = null;
+
+  if (!currentFilteredData || currentFilteredData.length === 0) {
+    showAppAlert('No data available. Please load data on the View page first.', 'error');
+    return;
+  }
+
+  if (!isJsPdfReady()) {
+    showAppAlert('PDF engine is still loading. Please wait a moment and tap Download again.', 'error');
+    return;
+  }
+
+  downloadBtnEl.disabled = true;
+  downloadBtnEl.textContent = '⏳ Generating...';
 
   try {
-    if (!currentFilteredData || currentFilteredData.length === 0) {
-      showAppAlert('No data available. Please load data on the View page first.', 'error');
-      return;
-    }
-
-    downloadBtnEl.disabled = true;
-    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
-
-    const ready = await waitForPdfLibs();
-    if (!ready) {
-      await showAppAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are uploaded in the same folder as index.html.', 'error');
-      return;
-    }
-
-    downloadBtnEl.textContent = '⏳ Preparing data...';
-
     const sorted = [...currentFilteredData].sort((a, b) => {
       const da = taParseDMY(a.Date), db = taParseDMY(b.Date);
       if (!da) return 1;
@@ -563,7 +459,7 @@ async function downloadTAPdfDirect() {
     const trips = sorted.map((row, i) => taBuildTrip(row, i)).filter(t => t !== null);
 
     if (trips.length === 0) {
-      await showAppAlert('Could not process any rows from the data. Check Date/Time formats in your sheet.', 'error');
+      showAppAlert('Could not process any rows. Check Date/Time formats in your sheet.', 'error');
       return;
     }
 
@@ -575,132 +471,39 @@ async function downloadTAPdfDirect() {
       appointmentDate: employeeData.Date_Of_Appointment || ''
     };
 
-    const bodyHtml = taBuildAllPages(trips, header);
-
-    container = document.getElementById('pdf-template');
-    if (!container) throw new Error('#pdf-template container not found in index.html');
-
-    container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
-    container.style.cssText = `
-      display:block; position:fixed; top:0; left:0;
-      width:1123px; background:#fff; z-index:9998;
-      overflow:visible; margin:0; padding:0;
-    `;
-
-    spinnerOverlay = document.createElement('div');
-    spinnerOverlay.id = 'pdf-generating-overlay';
-    spinnerOverlay.style.cssText = `
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(26,26,46,0.92); z-index:9999;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      color:#fff; font-family:Arial, sans-serif; text-align:center; padding:20px;
-    `;
-    spinnerOverlay.innerHTML = `
-      <div style="font-size:40px; margin-bottom:12px;">⏳</div>
-      <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
-    `;
-    document.body.appendChild(spinnerOverlay);
-    const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
-
-    const pageEls = container.querySelectorAll('.page');
-    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
+    const pages = taPaginateTrips(trips);
+    let cumulative = { rs: 0, p: 0 };
+    pages.forEach(pageObj => {
+      if (pageObj.type === 'first') {
+        cumulative = taSumAmounts(pageObj.trips);
+        pageObj.runningTotal = cumulative;
+      } else {
+        pageObj.bf = { ...cumulative };
+        const newSum = taSumAmounts(pageObj.trips);
+        let rs = cumulative.rs + newSum.rs, p = cumulative.p + newSum.p;
+        rs += Math.floor(p / 100); p %= 100;
+        cumulative = { rs, p };
+        pageObj.runningTotal = cumulative;
+      }
+    });
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
-    const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
-    const MAX_W = PAGE_W - MARGIN * 2;
-    const MAX_H = PAGE_H - MARGIN * 2;
-
-    // ---- STEP 1: Build the entire PDF in memory (can take as long as needed) ----
-    for (let i = 0; i < pageEls.length; i++) {
-      progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
-
-      const canvas = await html2canvas(pageEls[i], {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1123
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-      let renderW = MAX_W;
-      let renderH = (canvas.height * renderW) / canvas.width;
-      if (renderH > MAX_H) {
-        const scale = MAX_H / renderH;
-        renderH = MAX_H;
-        renderW = renderW * scale;
-      }
-
-      const xOffset = MARGIN + (MAX_W - renderW) / 2;
-      const yOffset = MARGIN;
-
+    pages.forEach((pageObj, i) => {
       if (i > 0) pdf.addPage('a4', 'landscape');
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
-    }
-
-    container.style.display = 'none';
-    container.innerHTML = '';
+      taRenderPageVector(pdf, pageObj, header, pageObj.type === 'first');
+    });
 
     const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
     const safeName = displayName.replace(/\s+/g, '_');
-    const fileName = `TA_${safeName}_${safeMonth}.pdf`;
-
-    // ---- STEP 2: PDF is fully ready in memory. Now show a FRESH tap-to-save button. ----
-    // This is critical: the original button tap's "gesture" has expired after all
-    // the async waiting above. Browsers/WebViews require the actual save/download
-    // to happen INSTANTLY inside a real, fresh click — so we ask for one more tap here.
-    spinnerOverlay.innerHTML = `
-      <div style="font-size:46px; margin-bottom:14px;">✅</div>
-      <div style="font-size:15px; font-weight:700; margin-bottom:20px;">
-        Your PDF is ready!
-      </div>
-      <button id="pdf-final-save-btn" style="
-        padding:14px 32px; font-size:16px; font-weight:800; color:#fff;
-        background:linear-gradient(135deg,#06d6a0,#0a7a3c); border:none;
-        border-radius:12px; cursor:pointer; box-shadow:0 8px 20px rgba(6,214,160,0.4);
-      ">⬇️ Tap Here to Save PDF</button>
-      <div style="font-size:12px; margin-top:16px; opacity:0.8; max-width:280px;">
-        If nothing happens after tapping, your device will open the PDF in a new tab instead — use its own Download/Share button there.
-      </div>
-    `;
-
-    document.getElementById('pdf-final-save-btn').addEventListener('click', function () {
-      try {
-        // Primary attempt: direct save (works in normal browsers)
-        pdf.save(fileName);
-      } catch (e) {
-        console.warn('pdf.save() failed, falling back to blob/new-tab method:', e);
-      }
-
-      // Fallback (also runs alongside, harmless if save() already worked):
-      // Opens the PDF as a blob URL in a new tab — WebViews typically hand this
-      // off to the system's default browser/PDF viewer, where downloading works normally.
-      try {
-        const blob = pdf.output('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = fileName;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-      } catch (e2) {
-        console.error('Fallback blob download also failed:', e2);
-      }
-
-      spinnerOverlay.remove();
-      downloadBtnEl.disabled = false;
-      downloadBtnEl.textContent = '⬇️ Download';
-    });
+    pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
 
   } catch (err) {
-    console.error('downloadTAPdfDirect FAILED:', err);
-    if (spinnerOverlay) spinnerOverlay.remove();
-    if (container) { container.style.display = 'none'; container.innerHTML = ''; }
+    console.error('PDF generation failed:', err);
+    showAppAlert('PDF generation failed: ' + (err.message || err), 'error');
+  } finally {
     downloadBtnEl.disabled = false;
     downloadBtnEl.textContent = '⬇️ Download';
-    await showAppAlert('PDF generation failed:\n\n' + (err.message || err), 'error');
   }
 }
