@@ -289,7 +289,7 @@ function taBuildColgroup(isFirstPage) {
   // Both variants now sum to exactly 281mm (matches .page/table width precisely)
   return isFirstPage ? `
     <colgroup>
-      <col style="width:24mm"><col style="width:20mm"><col style="width:16mm">
+      <col style="width:20mm"><col style="width:20mm"><col style="width:16mm">
       <col style="width:16mm"><col style="width:20mm"><col style="width:20mm">
       <col style="width:12mm"><col style="width:16mm"><col style="width:97mm">
       <col style="width:14mm"><col style="width:14mm"><col style="width:12mm">
@@ -328,7 +328,7 @@ function taBuildPageDiv(pageNumber, pageObj, header) {
   }
 
   const certBlock = pageObj.type === 'final' ? `
-    <div class="cert-block">
+    <div class="cert-block" style="text-indent: 3em;">
       I hereby certify that. the above mentioned <b>${header.sri}</b>
       was absent on duty from his Headquarters station during the period
       charged for in the bill on Railway business and that the officer performed the journey by Rail/Air/sea/Road and
@@ -436,7 +436,7 @@ function taBuildFullDocument(bodyHtml) {
   .cf-row td { padding: 2px 4px; }
 
   .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
-  .signrow { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; font-weight: bold; }
+  .signrow { display: flex; justify-content: space-between; margin-top:60px; font-size: 11px; font-weight: bold; }
   .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
   .signrow div span.label { display:block; text-decoration: underline; }
   .notes { margin-top: 12px; font-size: 10px; line-height: 1.35; }
