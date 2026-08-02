@@ -118,6 +118,9 @@ const MONTH_NAMES_FULL = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+// Users whose Object-of-Journey should NOT get "BOOKED BY SSE/M/KKSO" auto-appended
+const TAObjectSuffixExcludedUsers = ["NARENDRA_EKKA", "RAJA_MANDAL"];
+
 // Generates e.g. "January-2026" ... "December-2026" for the CURRENT year
 function buildTAMonthsForYear(year) {
   return MONTH_NAMES_FULL.map(m => `${m}-${year}`);
