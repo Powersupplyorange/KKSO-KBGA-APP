@@ -121,23 +121,11 @@
 </main>
 <!-- Remove the old broken <script src="https://cdnjs.dev/..."> line and replace with this -->
 <script>
-  // Tries multiple CDNs in order; sets window.__html2pdfLoaded = true/false when done
-  (function loadHtml2Pdf(sources, index) {
-    if (index >= sources.length) {
-      console.error('All html2pdf CDN sources failed to load.');
-      window.__html2pdfLoaded = false;
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = sources[index];
-    script.onload = () => { window.__html2pdfLoaded = true; console.log('html2pdf loaded from:', sources[index]); };
-    script.onerror = () => { console.warn('Failed to load html2pdf from:', sources[index]); loadHtml2Pdf(sources, index + 1); };
-    document.head.appendChild(script);
-  })([
-    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
-    'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
-    './html2pdf.bundle.min.js' // local fallback — see self-hosting note below
-  ], 0);
+  const s = document.createElement('script');
+  s.src = './html2pdf.bundle.min.js'; // fully self-hosted — works offline, no CDN dependency
+  s.onload = () => { window.__html2pdfLoaded = true; };
+  s.onerror = () => { window.__html2pdfLoaded = false; console.error('html2pdf.bundle.min.js not found in project folder.'); };
+  document.head.appendChild(s);
 </script>
 
 <script src="TAMapping.js"></script>
