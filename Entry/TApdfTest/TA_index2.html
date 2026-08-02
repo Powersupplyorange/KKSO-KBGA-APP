@@ -115,14 +115,38 @@
       </table>
     </div>
 
-    <!-- PDF template placeholder (future use) -->
-    <div id="pdf-template" style="position: fixed; left: -9999px; top: 0; width: 1123px; overflow: visible; background: #ffffff;"></div>
-
+    <!-- Hidden container used only during PDF generation -->
+    <div id="pdf-template" style="display:none;"></div>
   </div>
 </main>
-<!-- Remove the old broken <script src="https://cdnjs.dev/..."> line and replace with this -->
-<script src="html2canvas.min.js"></script>
-<script src="jspdf.umd.min.js"></script>
+
+<!-- ===== PDF Engine loaders (self-hosted first, then CDN fallback) ===== -->
+<script>
+  function loadScript(sources, index, globalCheckFn, onDone) {
+    if (index >= sources.length) { onDone(false); return; }
+    if (globalCheckFn()) { onDone(true); return; }
+    const s = document.createElement('script');
+    s.src = sources[index];
+    s.onload = () => onDone(true);
+    s.onerror = () => { console.warn('Failed to load:', sources[index]); loadScript(sources, index + 1, globalCheckFn, onDone); };
+    document.head.appendChild(s);
+  }
+
+  window.__html2canvasLoaded = false;
+  window.__jsPDFLoaded = false;
+
+  loadScript([
+    './html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+  ], 0, () => typeof html2canvas !== 'undefined', (ok) => { window.__html2canvasLoaded = ok; });
+
+  loadScript([
+    './jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+  ], 0, () => (window.jspdf && window.jspdf.jsPDF), (ok) => { window.__jsPDFLoaded = ok; });
+</script>
 
 <script src="TAMapping.js"></script>
 <script src="taPdf.js"></script>
