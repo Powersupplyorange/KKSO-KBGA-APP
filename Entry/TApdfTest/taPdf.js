@@ -1,25 +1,42 @@
-// ===================== taPdf.js =====================
-// Builds the "Travelling Allowance Journal" printable page(s)
-// from currentFilteredData (already fetched/filtered in script.js)
+// ===================== taPdf.js (FIXED — defensive error handling) =====================
 
 // ---------- date/time helpers ----------
 function taParseDMY(dateStr) {
-  const parts = (dateStr || '').split('-');
-  if (parts.length !== 3) return null;
+  if (!dateStr || typeof dateStr !== 'string') {
+    console.warn('taParseDMY: invalid/empty date input:', dateStr);
+    return null;
+  }
+  const parts = dateStr.trim().split('-');
+  if (parts.length !== 3) {
+    console.warn('taParseDMY: unexpected date format:', dateStr);
+    return null;
+  }
   const d = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10);
-  const y = 2000 + parseInt(parts[2], 10);
-  return new Date(y, m - 1, d);
+  let y = parseInt(parts[2], 10);
+  if (isNaN(d) || isNaN(m) || isNaN(y)) {
+    console.warn('taParseDMY: non-numeric date parts:', dateStr);
+    return null;
+  }
+  if (y < 100) y = 2000 + y;
+  const dt = new Date(y, m - 1, d);
+  if (isNaN(dt.getTime())) {
+    console.warn('taParseDMY: resulted in Invalid Date:', dateStr);
+    return null;
+  }
+  return dt;
 }
 
 function taFormatDMY(dateObj) {
+  if (!dateObj || isNaN(dateObj.getTime())) return '';
   const p = n => (n < 10 ? '0' + n : '' + n);
   return p(dateObj.getDate()) + '-' + p(dateObj.getMonth() + 1) + '-' + String(dateObj.getFullYear()).slice(-2);
 }
 
 function taTimeToMinutes(t) {
-  if (!t) return 0;
+  if (!t || typeof t !== 'string' || !t.includes(':')) return 0;
   const [h, m] = t.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return 0;
   return h * 60 + m;
 }
 
@@ -30,15 +47,12 @@ function taMinutesToHHMM(mins) {
   return p(h) + ':' + p(mm);
 }
 
-// "KBGA (BELEGHATA)" -> "KBGA"
 function taExtractCode(fullText) {
-  if (!fullText) return '';
+  if (!fullText || typeof fullText !== 'string') return '';
   return fullText.split('(')[0].trim();
 }
 
-// ---------- "No. of Train" logic (CORRECTED) ----------
-// Uses raw Left Time (row 1) OR raw Arrived Time final (row 2) — either one
-// falling inside 08:00-20:00 on a weekday qualifies as Metro.
+// ---------- "No. of Train" logic ----------
 function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
   const code = taExtractCode(toFullText);
   if (!code) return '';
@@ -49,69 +63,80 @@ function taComputeNoOfTrain(toFullText, dateObj, leftMin, finalArrivedMin) {
   if (unrestricted.includes(code)) return '-By Metro-';
 
   if (restricted.includes(code)) {
-    const dow = dateObj.getDay(); // 0=Sun..6=Sat
+    if (!dateObj) return '-By Car-'; // safe fallback if date couldn't be parsed
+    const dow = dateObj.getDay();
     const isWeekday = dow >= 1 && dow <= 5;
-
-    const inWindow = (mins) => mins >= 480 && mins <= 1200; // 08:00-20:00
+    const inWindow = (mins) => mins >= 480 && mins <= 1200;
     const eitherInWindow = inWindow(leftMin) || inWindow(finalArrivedMin);
-
     return (isWeekday && eitherInWindow) ? '-By Metro-' : '-By Car-';
   }
   return '-By Car-';
 }
 
-// ---------- Build one trip (out + return) from one sheet row (CORRECTED CALL) ----------
-// FIX #6: uppercase + conditional suffix, avoiding duplicate suffix if already present
+// ---------- Object of Journey formatting ----------
 function taFormatObjectText(objectText) {
   const excluded = (typeof TAObjectSuffixExcludedUsers !== 'undefined') ? TAObjectSuffixExcludedUsers : [];
   let text = (objectText || '').toString().trim().toUpperCase();
-
   const suffix = 'BOOKED BY SSE/M/KKSO';
   const alreadyHasSuffix = text.endsWith(suffix);
-
   if (!excluded.includes(lookupKey) && !alreadyHasSuffix) {
     text = text + ' ' + suffix;
   }
   return text;
 }
 
-function taBuildTrip(row) {
-  const dateObj = taParseDMY(row.Date);
-  const leftMin = taTimeToMinutes(row.LeftTime);
-  const finalArrivedMin = taTimeToMinutes(row.ArrivedTime);
+// ---------- Build one trip from one sheet row (DEFENSIVE) ----------
+function taBuildTrip(row, rowIndex) {
+  try {
+    const dateObj = taParseDMY(row.Date);
+    const leftMin = taTimeToMinutes(row.LeftTime);
+    const finalArrivedMin = taTimeToMinutes(row.ArrivedTime);
 
-  const travelMinutes = (typeof stationTime !== 'undefined' && stationTime[row.To] !== undefined)
-    ? stationTime[row.To] : (console.warn('Missing stationTime for:', row.To), 0);
+    const travelMinutes = (typeof stationTime !== 'undefined' && stationTime[row.To] !== undefined)
+      ? stationTime[row.To]
+      : (console.warn('Row', rowIndex, '- Missing stationTime for:', row.To, '- using 0 minutes'), 0);
 
-  const outArrivedMin = leftMin + travelMinutes;
-  const outArrivedStr = taMinutesToHHMM(outArrivedMin);
-  const fromCode = taExtractCode(row.From);
-  const toCode   = taExtractCode(row.To);
+    const outArrivedMin = leftMin + travelMinutes;
+    const outArrivedStr = taMinutesToHHMM(outArrivedMin);
+    const fromCode = taExtractCode(row.From);
+    const toCode   = taExtractCode(row.To);
 
-  const noOfTrain = taComputeNoOfTrain(row.To, dateObj, leftMin, finalArrivedMin);
+    const noOfTrain = taComputeNoOfTrain(row.To, dateObj, leftMin, finalArrivedMin);
 
-  const retLeftMin = finalArrivedMin - travelMinutes;
-  const retLeftStr = taMinutesToHHMM(retLeftMin);
-  const retArrivedStr = row.ArrivedTime;
-  const nextDay = finalArrivedMin < leftMin;
+    const retLeftMin = finalArrivedMin - travelMinutes;
+    const retLeftStr = taMinutesToHHMM(retLeftMin);
+    const retArrivedStr = row.ArrivedTime || '';
+    const nextDay = finalArrivedMin < leftMin;
 
-  const rate = (typeof employeeData !== 'undefined' && employeeData.Rates) ? parseFloat(employeeData.Rates) : 0;
-  const pct = parseFloat((row.TA || '0').toString().replace('%', '')) || 0;
-  const amount = rate * pct / 100;
-  const rs = Math.floor(amount + 1e-6);
-  const p  = Math.round((amount - rs) * 100);
+    const rate = (typeof employeeData !== 'undefined' && employeeData.Rates) ? parseFloat(employeeData.Rates) : 0;
+    const pct = parseFloat((row.TA || '0').toString().replace('%', '')) || 0;
+    const amount = rate * pct / 100;
+    const rs = Math.floor(amount + 1e-6);
+    const p  = Math.round((amount - rs) * 100);
 
-  return {
-    dateObj, dateStr: row.Date, train: noOfTrain,
-    out: { left: row.LeftTime, arrived: outArrivedStr, from: fromCode, to: toCode },
-    ret: { left: retLeftStr, arrived: retArrivedStr, from: toCode, to: fromCode },
-    nextDay, days: row.TA,
-    object: taFormatObjectText(row.ObjectOfJourney), // ✅ uppercase + suffix applied
-    rate, rs, p
-  };
+    // Fallback date object for row2 calculation if original date failed to parse
+    const safeDateObj = dateObj || new Date();
+    if (!dateObj) {
+      console.warn('Row', rowIndex, '- Date could not be parsed ("' + row.Date + '"), using today as fallback for internal calculation only. Displayed date will remain as-is.');
+    }
+
+    return {
+      dateObj: safeDateObj,
+      dateStr: row.Date || '',
+      train: noOfTrain,
+      out: { left: row.LeftTime || '', arrived: outArrivedStr, from: fromCode, to: toCode },
+      ret: { left: retLeftStr, arrived: retArrivedStr, from: toCode, to: fromCode },
+      nextDay, days: row.TA || '',
+      object: taFormatObjectText(row.ObjectOfJourney),
+      rate, rs, p
+    };
+  } catch (err) {
+    console.error('Failed to build trip for row', rowIndex, row, err);
+    return null; // caller will filter these out
+  }
 }
 
-// ---------- Pagination (Page1=7 sets, others=6 sets + B/F) ----------
+// ---------- Pagination ----------
 function taPaginateTrips(trips) {
   const pages = [];
   const page1 = trips.slice(0, 7);
@@ -163,7 +188,7 @@ function taAmountToWords(rs, p) {
   return words + ' Only';
 }
 
-// ---------- KM decorative pattern (fixed, exactly as your template) ----------
+// ---------- KM decorative pattern ----------
 const KM_PATTERN_PAGE1 = ['A','B','O','V','E','','08','','K','M','','','',''];
 const KM_PATTERN_OTHER = ['','','A','B','O','V','E','','08','','K','M','',''];
 function taKmPatternFor(isFirstPage, idx) {
@@ -198,8 +223,6 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
     const kmB = taKmPatternFor(isFirstPage, idx++);
 
     if (!trip) {
-      // FIX #3: use rowspan="2" for cols 8-12 even when blank,
-      // so row2 always has the correct number of covered columns (12 total)
       html += `
         <tr>
           <td></td><td></td><td></td><td></td><td></td><td></td>
@@ -240,8 +263,7 @@ function taRenderRowsForPage(pageObj, isFirstPage) {
   return html;
 }
 
-
-// ---------- Page HTML builders ----------
+// ---------- Header block, table head, colgroup ----------
 function taBuildHeaderBlock(h) {
   return `
     <div class="top-right">
@@ -285,19 +307,12 @@ function taBuildTableHead() {
     </thead>`;
 }
 
-function taBuildColgroup(isFirstPage) {
-  // Both variants now sum to exactly 281mm (matches .page/table width precisely)
-  return isFirstPage ? `
+function taBuildColgroup() {
+  return `
     <colgroup>
-      <col style="width:20mm"><col style="width:20mm"><col style="width:16mm">
+      <col style="width:24mm"><col style="width:20mm"><col style="width:16mm">
       <col style="width:16mm"><col style="width:20mm"><col style="width:20mm">
-      <col style="width:12mm"><col style="width:16mm"><col style="width:92mm">
-      <col style="width:14mm"><col style="width:14mm"><col style="width:12mm">
-    </colgroup>` : `
-    <colgroup>
-      <col style="width:20mm"><col style="width:20mm"><col style="width:16mm">
-      <col style="width:16mm"><col style="width:20mm"><col style="width:20mm">
-      <col style="width:12mm"><col style="width:16mm"><col style="width:92mm">
+      <col style="width:12mm"><col style="width:16mm"><col style="width:97mm">
       <col style="width:14mm"><col style="width:14mm"><col style="width:12mm">
     </colgroup>`;
 }
@@ -328,7 +343,7 @@ function taBuildPageDiv(pageNumber, pageObj, header) {
   }
 
   const certBlock = pageObj.type === 'final' ? `
-    <div class="cert-block" style="text-indent: 5em;">
+    <div class="cert-block">
       I hereby certify that. the above mentioned <b>${header.sri}</b>
       was absent on duty from his Headquarters station during the period
       charged for in the bill on Railway business and that the officer performed the journey by Rail/Air/sea/Road and
@@ -353,7 +368,7 @@ function taBuildPageDiv(pageNumber, pageObj, header) {
     <div class="page" id="page${pageNumber}">
       ${headerBlock}
       <table class="ta-table" id="table${pageNumber}">
-        ${taBuildColgroup(isFirstPage)}
+        ${taBuildColgroup()}
         ${taBuildTableHead()}
         <tbody>${rowsHtml}</tbody>
         ${footRow}
@@ -384,8 +399,7 @@ function taBuildAllPages(trips, header) {
   }).join('\n');
 }
 
-// ---------- Full document wrapper ----------
-// Shared CSS used by BOTH the print-preview window AND the direct-download PDF
+// ---------- Shared CSS ----------
 function taGetPdfStyles() {
   return `
     * { box-sizing: border-box; }
@@ -429,7 +443,7 @@ function taGetPdfStyles() {
     .cf-row td { padding: 2px 4px; }
 
     .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
-    .signrow { display: flex; justify-content: space-between; margin-top: 60px; font-size: 11px; font-weight: bold; }
+    .signrow { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; font-weight: bold; }
     .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
     .signrow div span.label { display:block; text-decoration: underline; }
     .notes { margin-top: 8px; font-size: 10px; line-height: 1.35; }
@@ -441,7 +455,7 @@ function taGetPdfStyles() {
   `;
 }
 
-// Used only for the "Print / Preview" flow (opens a new tab)
+// ---------- Print-preview method (opens new tab) ----------
 function taBuildFullDocument(bodyHtml) {
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
@@ -456,337 +470,194 @@ ${bodyHtml}
 </body></html>`;
 }
 
-// ---------- Main entry point ----------
 function generateAndOpenTAPdf() {
-  if (!currentFilteredData || currentFilteredData.length === 0) {
-    alert('No data available. Please load data on the View page first.');
-    return;
-  }
-
-  const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
-  const trips = sorted.map(taBuildTrip);
-
-  const header = {
-    pfNo: employeeData.PF_No || '',
-    billUnit: employeeData.Bill_Unit || '',
-    mob: employeeData.Mob_No || '',
-    sri: displayName,
-    allowanceMonth: monthSelect.value,
-    designation: employeeData.Designation || '',
-    pay: employeeData.Basic_Pay || '',
-    scaleOfPay: employeeData.Scale || '',
-    appointmentDate: employeeData.Date_Of_Appointment || ''
-  };
-
-  const bodyHtml = taBuildAllPages(trips, header);
-  const fullDoc = taBuildFullDocument(bodyHtml);
-
-  const pdfWindow = window.open('', '_blank');
-  if (!pdfWindow) { alert('Popup blocked — please allow popups to generate the PDF.'); return; }
-  pdfWindow.document.open();
-  pdfWindow.document.write(fullDoc);
-  pdfWindow.document.close();
-}
-// ===================== DIRECT PDF DOWNLOAD (no print dialog) — FIXED VERSION =====================
-
-/* ---------- Fixed Object Text Formatting ----------
-function taFormatObjectText(objectText) {
-  const excluded = (typeof TAObjectSuffixExcludedUsers !== 'undefined') ? TAObjectSuffixExcludedUsers : [];
-  let text = (objectText || '').toString().trim().toUpperCase();
-
-  // Safely determine lookup key (PF_No or displayName fallback)
-  const key = (typeof employeeData !== 'undefined' && employeeData.PF_No) 
-    ? employeeData.PF_No 
-    : (typeof displayName !== 'undefined' ? displayName : '');
-
-  const suffix = 'BOOKED BY SSE/M/KKSO';
-  const alreadyHasSuffix = text.endsWith(suffix);
-
-  if (!excluded.includes(key) && !alreadyHasSuffix) {
-    text = text + ' ' + suffix;
-  }
-  return text;
-}*/
-
-// ---------- Fixed Library Wait Check ----------
-async function waitForPdfLibs(maxWaitMs = 5000) {
-  const startTime = Date.now();
-  while (Date.now() - startTime < maxWaitMs) {
-    const hasHtml2Canvas = typeof window.html2canvas === 'function';
-    const hasJsPdf = typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function';
-    if (hasHtml2Canvas && hasJsPdf) return true;
-    await new Promise(r => setTimeout(r, 100)); // check every 100ms
-  }
-  return false;
-}
-
-// Helper to safely trigger alerts whether showAppAlert exists or not
-async function taAlert(msg, type = 'error') {
-  if (typeof showAppAlert === 'function') {
-    await showAppAlert(msg, type);
-  } else {
-    alert(msg);
-  }
-}
-
-// ===================== DIRECT PDF DOWNLOAD =====================
-async function downloadTAPdfDirect() {
-  if (!currentFilteredData || currentFilteredData.length === 0) {
-    await taAlert('No data available. Please load data on the View page first.', 'error');
-    return;
-  }
-
-  const downloadBtnEl = document.getElementById('downloadBtn');
-  if (downloadBtnEl) {
-    downloadBtnEl.disabled = true;
-    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
-  }
-
-  const ready = await waitForPdfLibs();
-  if (!ready) {
-    if (downloadBtnEl) {
-      downloadBtnEl.disabled = false;
-      downloadBtnEl.textContent = '⬇️ Download';
-    }
-    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are included.', 'error');
-    return;
-  }
-
-  if (downloadBtnEl) downloadBtnEl.textContent = '⏳ Generating PDF...';
-
-  // Create loading overlay
-  const spinnerOverlay = document.createElement('div');
-  spinnerOverlay.id = 'pdf-generating-overlay';
-  spinnerOverlay.style.cssText = `
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(26,26,46,0.92); z-index:9999;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    color:#fff; font-family:Arial, sans-serif;
-  `;
-  spinnerOverlay.innerHTML = `
-    <div style="font-size:40px; margin-bottom:12px;">⏳</div>
-    <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
-  `;
-  document.body.appendChild(spinnerOverlay);
-  const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
-
-  const container = document.getElementById('pdf-template');
-
   try {
-    const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
-    const trips = sorted.map(taBuildTrip);
+    if (!currentFilteredData || currentFilteredData.length === 0) {
+      showAppAlert('No data available. Please load data on the View page first.', 'error');
+      return;
+    }
+
+    const sorted = [...currentFilteredData].sort((a, b) => {
+      const da = taParseDMY(a.Date), db = taParseDMY(b.Date);
+      if (!da) return 1;
+      if (!db) return -1;
+      return da - db;
+    });
+
+    const trips = sorted.map((row, i) => taBuildTrip(row, i)).filter(t => t !== null);
+
+    if (trips.length === 0) {
+      showAppAlert('Could not process any rows — all had invalid data. Check console (F12) for details.', 'error');
+      return;
+    }
 
     const header = {
-      pfNo: (typeof employeeData !== 'undefined' && employeeData.PF_No) || '',
-      billUnit: (typeof employeeData !== 'undefined' && employeeData.Bill_Unit) || '',
-      mob: (typeof employeeData !== 'undefined' && employeeData.Mob_No) || '',
-      sri: typeof displayName !== 'undefined' ? displayName : '',
-      allowanceMonth: (typeof monthSelect !== 'undefined' && monthSelect.value) || '',
-      designation: (typeof employeeData !== 'undefined' && employeeData.Designation) || '',
-      pay: (typeof employeeData !== 'undefined' && employeeData.Basic_Pay) || '',
-      scaleOfPay: (typeof employeeData !== 'undefined' && employeeData.Scale) || '',
-      appointmentDate: (typeof employeeData !== 'undefined' && employeeData.Date_Of_Appointment) || ''
+      pfNo: employeeData.PF_No || '', billUnit: employeeData.Bill_Unit || '',
+      mob: employeeData.Mob_No || '', sri: displayName,
+      allowanceMonth: monthSelect.value, designation: employeeData.Designation || '',
+      pay: employeeData.Basic_Pay || '', scaleOfPay: employeeData.Scale || '',
+      appointmentDate: employeeData.Date_Of_Appointment || ''
     };
 
     const bodyHtml = taBuildAllPages(trips, header);
+    const fullDoc = taBuildFullDocument(bodyHtml);
 
-    // Render HTML inside off-screen container
-    container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
-    container.style.cssText = `
-      position: fixed; left: -9999px; top: 0;
-      width: 1123px; background: #fff; z-index: -1;
-      overflow: visible; margin: 0; padding: 0;
-    `;
-
-    // Force browser reflow to compute heights before canvas capture
-    void container.offsetHeight;
-    await new Promise(r => setTimeout(r, 200));
-
-    const pageEls = container.querySelectorAll('.page');
-    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
-
-    const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
-    const MAX_W = PAGE_W - MARGIN * 2;   // 281mm
-    const MAX_H = PAGE_H - MARGIN * 2;   // 194mm
-
-// Helper to safely trigger download across Desktop, Mobile, and WebViews
-function savePdfFile(pdf, filename) {
-  try {
-    // 1. Try standard jsPDF save first
-    pdf.save(filename);
+    const pdfWindow = window.open('', '_blank');
+    if (!pdfWindow) {
+      showAppAlert('Popup blocked — please allow popups to generate the PDF.', 'error');
+      return;
+    }
+    pdfWindow.document.open();
+    pdfWindow.document.write(fullDoc);
+    pdfWindow.document.close();
   } catch (err) {
-    console.warn('pdf.save() failed, using Blob fallback:', err);
-    try {
-      // 2. Blob fallback for Mobile Browsers / WebViews
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-    } catch (blobErr) {
-      console.warn('Blob download failed, opening Data URI:', blobErr);
-      // 3. Direct Data URI fallback as last resort
-      const dataUri = pdf.output('datauristring');
-      window.open(dataUri, '_blank');
-    }
+    console.error('generateAndOpenTAPdf failed:', err);
+    showAppAlert('Print preview failed: ' + (err.message || err), 'error');
   }
 }
 
+// ---------- DIRECT PDF DOWNLOAD (html2canvas + jsPDF) — FULLY WRAPPED IN TRY/CATCH ----------
+function waitForPdfLibs(maxWaitMs = 5000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    (function check() {
+      const canvasReady = (typeof html2canvas !== 'undefined');
+      const jsPdfReady = (window.jspdf && typeof window.jspdf.jsPDF !== 'undefined');
+      if (canvasReady && jsPdfReady) return resolve(true);
+      if (window.__html2canvasLoaded === false || window.__jsPDFLoaded === false) return resolve(false);
+      if (Date.now() - start > maxWaitMs) return resolve(canvasReady && jsPdfReady);
+      setTimeout(check, 150);
+    })();
+  });
+}
+
 async function downloadTAPdfDirect() {
-  if (!currentFilteredData || currentFilteredData.length === 0) {
-    await taAlert('No data available. Please load data on the View page first.', 'error');
-    return;
-  }
-
   const downloadBtnEl = document.getElementById('downloadBtn');
-  if (downloadBtnEl) {
-    downloadBtnEl.disabled = true;
-    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
-  }
-
-  const ready = await waitForPdfLibs();
-  if (!ready) {
-    if (downloadBtnEl) {
-      downloadBtnEl.disabled = false;
-      downloadBtnEl.textContent = '⬇️ Download';
-    }
-    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are loaded.', 'error');
-    return;
-  }
-
-  if (downloadBtnEl) downloadBtnEl.textContent = '⏳ Generating PDF...';
-
-  // Overlay
-  const spinnerOverlay = document.createElement('div');
-  spinnerOverlay.id = 'pdf-generating-overlay';
-  spinnerOverlay.style.cssText = `
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(26,26,46,0.92); z-index:9999;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    color:#fff; font-family:Arial, sans-serif;
-  `;
-  spinnerOverlay.innerHTML = `
-    <div style="font-size:40px; margin-bottom:12px;">⏳</div>
-    <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
-  `;
-  document.body.appendChild(spinnerOverlay);
-  const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
-
-  const container = document.getElementById('pdf-template');
+  let spinnerOverlay = null;
+  let container = null;
 
   try {
-    const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
-    const trips = sorted.map(taBuildTrip);
+    if (!currentFilteredData || currentFilteredData.length === 0) {
+      showAppAlert('No data available. Please load data on the View page first.', 'error');
+      return;
+    }
+
+    downloadBtnEl.disabled = true;
+    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
+
+    const ready = await waitForPdfLibs();
+    if (!ready) {
+      await showAppAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are uploaded in the same folder as index.html.', 'error');
+      return;
+    }
+
+    downloadBtnEl.textContent = '⏳ Preparing data...';
+
+    const sorted = [...currentFilteredData].sort((a, b) => {
+      const da = taParseDMY(a.Date), db = taParseDMY(b.Date);
+      if (!da) return 1;
+      if (!db) return -1;
+      return da - db;
+    });
+
+    console.log('Total rows to process:', sorted.length);
+
+    const trips = sorted.map((row, i) => taBuildTrip(row, i)).filter(t => t !== null);
+    console.log('Successfully built trips:', trips.length, 'of', sorted.length);
+
+    if (trips.length === 0) {
+      await showAppAlert('Could not process any rows from the data. Please check the Date/Time formats in your sheet, or open console (F12) for details.', 'error');
+      return;
+    }
 
     const header = {
-      pfNo: (typeof employeeData !== 'undefined' && employeeData.PF_No) || '',
-      billUnit: (typeof employeeData !== 'undefined' && employeeData.Bill_Unit) || '',
-      mob: (typeof employeeData !== 'undefined' && employeeData.Mob_No) || '',
-      sri: typeof displayName !== 'undefined' ? displayName : '',
-      allowanceMonth: (typeof monthSelect !== 'undefined' && monthSelect.value) || '',
-      designation: (typeof employeeData !== 'undefined' && employeeData.Designation) || '',
-      pay: (typeof employeeData !== 'undefined' && employeeData.Basic_Pay) || '',
-      scaleOfPay: (typeof employeeData !== 'undefined' && employeeData.Scale) || '',
-      appointmentDate: (typeof employeeData !== 'undefined' && employeeData.Date_Of_Appointment) || ''
+      pfNo: employeeData.PF_No || '', billUnit: employeeData.Bill_Unit || '',
+      mob: employeeData.Mob_No || '', sri: displayName,
+      allowanceMonth: monthSelect.value, designation: employeeData.Designation || '',
+      pay: employeeData.Basic_Pay || '', scaleOfPay: employeeData.Scale || '',
+      appointmentDate: employeeData.Date_Of_Appointment || ''
     };
 
+    console.log('Building HTML pages...');
     const bodyHtml = taBuildAllPages(trips, header);
+    console.log('HTML built successfully, length:', bodyHtml.length);
 
-    // Off-screen layout container
+    container = document.getElementById('pdf-template');
+    if (!container) throw new Error('#pdf-template container not found in index.html');
+
     container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
     container.style.cssText = `
-      position: fixed; left: -9999px; top: 0;
-      width: 1123px; background: #fff; z-index: -1;
-      overflow: visible; margin: 0; padding: 0;
+      display:block; position:fixed; top:0; left:0;
+      width:1123px; background:#fff; z-index:9998;
+      overflow:visible; margin:0; padding:0;
     `;
 
-    // Force browser reflow to complete rendering before capturing
-    void container.offsetHeight;
-    await new Promise(r => setTimeout(r, 250));
+    spinnerOverlay = document.createElement('div');
+    spinnerOverlay.id = 'pdf-generating-overlay';
+    spinnerOverlay.style.cssText = `
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(26,26,46,0.92); z-index:9999;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      color:#fff; font-family:Arial, sans-serif;
+    `;
+    spinnerOverlay.innerHTML = `
+      <div style="font-size:40px; margin-bottom:12px;">⏳</div>
+      <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
+    `;
+    document.body.appendChild(spinnerOverlay);
+    const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
 
     const pageEls = container.querySelectorAll('.page');
-    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
+    console.log('Number of .page elements found:', pageEls.length);
+    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found in container).');
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
     const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
-    const MAX_W = PAGE_W - MARGIN * 2;   // 281mm
-    const MAX_H = PAGE_H - MARGIN * 2;   // 194mm
+    const MAX_W = PAGE_W - MARGIN * 2;
+    const MAX_H = PAGE_H - MARGIN * 2;
 
     for (let i = 0; i < pageEls.length; i++) {
       progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
+      console.log('Rendering page', i + 1, 'of', pageEls.length);
 
-      const pageEl = pageEls[i];
-
-      const canvas = await html2canvas(pageEl, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        windowWidth: 1123
+      const canvas = await html2canvas(pageEls[i], {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1123
       });
 
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        console.warn(`Page ${i + 1} produced zero dimensions. Skipping.`);
-        continue;
-      }
+      console.log('Page', i + 1, 'canvas size:', canvas.width, 'x', canvas.height);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       let renderW = MAX_W;
       let renderH = (canvas.height * renderW) / canvas.width;
-
       if (renderH > MAX_H) {
         const scale = MAX_H / renderH;
         renderH = MAX_H;
         renderW = renderW * scale;
       }
 
-      let xOffset = MARGIN + (MAX_W - renderW) / 2;
-      let yOffset = MARGIN;
-
-      // Sanitize coordinates
-      renderW = Number.isFinite(renderW) && renderW > 0 ? renderW : MAX_W;
-      renderH = Number.isFinite(renderH) && renderH > 0 ? renderH : MAX_H;
-      xOffset = Number.isFinite(xOffset) ? xOffset : MARGIN;
-      yOffset = Number.isFinite(yOffset) ? yOffset : MARGIN;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const xOffset = MARGIN + (MAX_W - renderW) / 2;
+      const yOffset = MARGIN;
 
       if (i > 0) pdf.addPage('a4', 'landscape');
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
     }
 
-    progressText.textContent = 'Saving PDF...';
-
-    const monthVal = (typeof monthSelect !== 'undefined' && monthSelect.value) ? monthSelect.value : 'TA';
-    const nameVal = typeof displayName !== 'undefined' ? displayName : 'User';
-    const safeMonth = monthVal.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const safeName = nameVal.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `TA_${safeName}_${safeMonth}.pdf`;
-
-    // Multi-fallback save trigger
-    savePdfFile(pdf, filename);
+    const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
+    const safeName = displayName.replace(/\s+/g, '_');
+    console.log('Saving PDF as:', `TA_${safeName}_${safeMonth}.pdf`);
+    pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
+    console.log('PDF save() called successfully.');
 
   } catch (err) {
-    console.error('PDF generation failed:', err);
-    await taAlert('PDF generation failed: ' + (err.message || err), 'error');
+    console.error('downloadTAPdfDirect FAILED:', err);
+    await showAppAlert('PDF generation failed:\n\n' + (err.message || err) + '\n\n(Check browser console for full details)', 'error');
   } finally {
-    if (container) {
-      container.innerHTML = '';
-      container.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 1123px;';
-    }
+    if (container) { container.style.display = 'none'; container.innerHTML = ''; }
     if (spinnerOverlay) spinnerOverlay.remove();
-    if (downloadBtnEl) {
-      downloadBtnEl.disabled = false;
-      downloadBtnEl.textContent = '⬇️ Download';
-    }
+    downloadBtnEl.disabled = false;
+    downloadBtnEl.textContent = '⬇️ Download';
   }
-}
+          }
