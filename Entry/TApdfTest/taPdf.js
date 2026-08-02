@@ -441,9 +441,14 @@ function taGetPdfStyles() {
 }
 
 function taBuildFullDocument(bodyHtml) {
+  // Build a clean filename-friendly title: e.g. "MANISH_KUMAR_June-2026"
+  const safeName = (displayName || 'TA').replace(/\s+/g, '_');
+  const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
+  const pdfTitle = `${safeName}_${safeMonth}`;
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
-<title>TA Journal - Print Preview</title>
+<title>${pdfTitle}</title>
 <style>
   @page { size: A4 landscape; margin: 8mm; }
   ${taGetPdfStyles()}
@@ -457,8 +462,6 @@ function taBuildFullDocument(bodyHtml) {
 ${bodyHtml}
 </div>
 <script>
-  // Auto-open the native Print dialog shortly after the page renders,
-  // so the Print interface appears immediately without requiring an extra tap.
   window.addEventListener('load', function() {
     setTimeout(function() {
       window.print();
