@@ -385,66 +385,70 @@ function taBuildAllPages(trips, header) {
 }
 
 // ---------- Full document wrapper ----------
+// Shared CSS used by BOTH the print-preview window AND the direct-download PDF
+function taGetPdfStyles() {
+  return `
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #000; background: #ddd; }
+
+    .page {
+      width: 281mm;
+      margin: 0 auto 4mm auto;
+      background: #fff;
+      padding: 0;
+      position: relative;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; margin-bottom:0; }
+
+    .top-right { text-align: right; font-size: 10.5px; line-height: 1.3; font-weight: bold; }
+    .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 3px 0 1px 0; }
+    .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 14px; margin: 0 0 6px 0; }
+    .info-container { padding: 0 100px; margin-bottom: 4px; }
+    .info-table { width: 100%; border-collapse: collapse; }
+    .info-table td { padding: 2px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
+    .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
+
+    table.ta-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1.2px solid #000;
+    }
+    table.ta-table th, table.ta-table td { border: 1px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 9.3px; word-wrap: break-word; }
+    table.ta-table th { font-weight: bold; background: #f2f2f2; }
+    table.ta-table thead tr { height: 6mm; }
+    table.ta-table tbody tr { height: 7.8mm; }
+
+    .object-col { text-align: left !important; text-transform: uppercase; }
+    .km-cell { font-weight: bold; }
+
+    tfoot td { font-weight: bold; }
+    .bf-row td { font-weight: bold; }
+    .cf-row td { padding: 2px 4px; }
+
+    .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
+    .signrow { display: flex; justify-content: space-between; margin-top: 60px; font-size: 11px; font-weight: bold; }
+    .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
+    .signrow div span.label { display:block; text-decoration: underline; }
+    .notes { margin-top: 8px; font-size: 10px; line-height: 1.35; }
+    .total-words-text { font-size: 10.5px; }
+
+    .print-btn { position: fixed; top: 10px; left: 10px; z-index: 999; padding: 8px 14px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .print-btn:hover { background: #1d4ed8; }
+    @media print { body { background: #fff; } .page { margin: 0 auto; } .print-btn { display: none; } }
+  `;
+}
+
+// Used only for the "Print / Preview" flow (opens a new tab)
 function taBuildFullDocument(bodyHtml) {
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <title>Metro Railway/Kolkata - Travelling Allowance Journal</title>
 <style>
   @page { size: A4 landscape; margin: 8mm; }
-  * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #000; background: #ddd; }
-
-  /* FIX #1 & #2: .page now matches the ACTUAL printable area (297-16=281mm x 210-16=194mm),
-     not the full physical sheet. This removes left/right asymmetry AND prevents
-     content from overflowing into extra blank pages. */
-  .page {
-    width: 281mm;
-    margin: 0 auto 4mm auto;
-    background: #fff;
-    padding: 0;
-    position: relative;
-    page-break-after: always;
-    /*overflow: hidden; */
-    /* safety net: clip instead of spilling a blank page */
-  }
-  .page:last-child { page-break-after: auto; margin-bottom:0; }
-
-  .top-right { text-align: right; font-size: 10.5px; line-height: 1.3; font-weight: bold; }
-  .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 3px 0 1px 0; }
-  .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 14px; margin: 0 0 6px 0; }
-  .info-container { padding: 0 100px; margin-bottom: 4px; }
-  .info-table { width: 100%; border-collapse: collapse; }
-  .info-table td { padding: 2px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
-  .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
-
-  table.ta-table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.2px solid #000; }
-  table.ta-table th, table.ta-table td { border: 1px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 9.3px; word-wrap: break-word; }
-  table.ta-table th { font-weight: bold; background: #f2f2f2; }
-  table.ta-table thead tr { height: 6mm; }
-  table.ta-table tbody tr { height: 7.8mm; } /* trimmed for safe vertical fit */
-
-  /* FIX #6: Object column left-aligned, vertically centered, uppercase */
-  .object-col { text-align: left !important; text-transform: uppercase; }
-  .km-cell { font-weight: bold; }
-
-  /* FIX #4: B/F, C/F and Total Rupees always bold */
-  tfoot td { font-weight: bold; }
-  .bf-row td { font-weight: bold; }
-
-  /* FIX #5: compact C/F row (no extra empty row) */
-  .cf-row td { padding: 2px 4px; }
-
-  .cert-block { margin-top: 10px; font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 8px; }
-  .signrow { display: flex; justify-content: space-between; margin-top:80px; font-size: 11px; font-weight: bold; }
-  .signrow div { text-align: center; width: 22%; border-top: 1px solid #000; padding-top: 3px; }
-  .signrow div span.label { display:block; text-decoration: underline; }
-  .notes { margin-top: 12px; font-size: 10px; line-height: 1.35; }
-  .total-words-text { font-size: 10.5px; }
-
-  .print-btn { position: fixed; top: 10px; left: 10px; z-index: 999; padding: 8px 14px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-  .print-btn:hover { background: #1d4ed8; }
-  @media print { body { background: #fff; } .page { margin: 0 auto; } .print-btn { display: none; } }
+  ${taGetPdfStyles()}
 </style></head>
 <body>
 <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF (select "Landscape" if not auto-selected)</button>
@@ -482,4 +486,74 @@ function generateAndOpenTAPdf() {
   pdfWindow.document.open();
   pdfWindow.document.write(fullDoc);
   pdfWindow.document.close();
+}
+// ===================== DIRECT PDF DOWNLOAD (no print dialog) =====================
+function downloadTAPdfDirect() {
+  if (!currentFilteredData || currentFilteredData.length === 0) {
+    alert('No data available. Please load data on the View page first.');
+    return;
+  }
+
+  if (typeof html2pdf === 'undefined') {
+    alert('PDF engine failed to load (check internet connection). Opening print-preview instead.');
+    generateAndOpenTAPdf(); // fallback to the print-window method
+    return;
+  }
+
+  const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
+  const trips = sorted.map(taBuildTrip);
+
+  const header = {
+    pfNo: employeeData.PF_No || '',
+    billUnit: employeeData.Bill_Unit || '',
+    mob: employeeData.Mob_No || '',
+    sri: displayName,
+    allowanceMonth: monthSelect.value,
+    designation: employeeData.Designation || '',
+    pay: employeeData.Basic_Pay || '',
+    scaleOfPay: employeeData.Scale || '',
+    appointmentDate: employeeData.Date_Of_Appointment || ''
+  };
+
+  const bodyHtml = taBuildAllPages(trips, header);
+
+  // Build a hidden, off-screen container (must be in DOM & visible-to-renderer,
+  // just positioned outside the viewport so the user never sees it flash)
+  const container = document.getElementById('pdf-template');
+  container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
+  container.style.display = 'block';
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '-99999px';
+  container.style.zIndex = '-1';
+
+  const downloadBtnEl = document.getElementById('downloadBtn');
+  downloadBtnEl.disabled = true;
+  downloadBtnEl.textContent = '⏳ Generating PDF...';
+
+  const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
+  const safeName = displayName.replace(/\s+/g, '_');
+
+  const opt = {
+    margin: 8, // mm — matches the visual look of the print-preview version
+    filename: `TA_${safeName}_${safeMonth}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, // ✅ forces landscape, no dialog
+    pagebreak: { mode: ['css', 'legacy'] } // respects our .page{page-break-after:always}
+  };
+
+  html2pdf().set(opt).from(container).save()
+    .then(() => {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    })
+    .catch(err => {
+      console.error('PDF generation failed:', err);
+      alert('PDF generation failed. Please try again or use Print instead.');
+    })
+    .finally(() => {
+      downloadBtnEl.disabled = false;
+      downloadBtnEl.textContent = '⬇️ Download';
+    });
 }
