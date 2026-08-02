@@ -489,66 +489,70 @@ function generateAndOpenTAPdf() {
 }
 // ===================== DIRECT PDF DOWNLOAD (no print dialog) — FIXED VERSION =====================
 
-// ===================== DIRECT PDF DOWNLOAD (html2canvas + jsPDF — reliable version) =====================
+/* ---------- Fixed Object Text Formatting ----------
+function taFormatObjectText(objectText) {
+  const excluded = (typeof TAObjectSuffixExcludedUsers !== 'undefined') ? TAObjectSuffixExcludedUsers : [];
+  let text = (objectText || '').toString().trim().toUpperCase();
 
-function waitForPdfLibs(maxWaitMs = 5000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    (function check() {
-      const canvasReady = (typeof html2canvas !== 'undefined');
-      const jsPdfReady = (window.jspdf && typeof window.jspdf.jsPDF !== 'undefined');
-      if (canvasReady && jsPdfReady) return resolve(true);
-      if (window.__html2canvasLoaded === false || window.__jsPDFLoaded === false) return resolve(false);
-      if (Date.now() - start > maxWaitMs) return resolve(canvasReady && jsPdfReady);
-      setTimeout(check, 150);
-    })();
-  });
+  // Safely determine lookup key (PF_No or displayName fallback)
+  const key = (typeof employeeData !== 'undefined' && employeeData.PF_No) 
+    ? employeeData.PF_No 
+    : (typeof displayName !== 'undefined' ? displayName : '');
+
+  const suffix = 'BOOKED BY SSE/M/KKSO';
+  const alreadyHasSuffix = text.endsWith(suffix);
+
+  if (!excluded.includes(key) && !alreadyHasSuffix) {
+    text = text + ' ' + suffix;
+  }
+  return text;
+}*/
+
+// ---------- Fixed Library Wait Check ----------
+async function waitForPdfLibs(maxWaitMs = 5000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < maxWaitMs) {
+    const hasHtml2Canvas = typeof window.html2canvas === 'function';
+    const hasJsPdf = typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function';
+    if (hasHtml2Canvas && hasJsPdf) return true;
+    await new Promise(r => setTimeout(r, 100)); // check every 100ms
+  }
+  return false;
 }
 
+// Helper to safely trigger alerts whether showAppAlert exists or not
+async function taAlert(msg, type = 'error') {
+  if (typeof showAppAlert === 'function') {
+    await showAppAlert(msg, type);
+  } else {
+    alert(msg);
+  }
+}
+
+// ===================== DIRECT PDF DOWNLOAD =====================
 async function downloadTAPdfDirect() {
   if (!currentFilteredData || currentFilteredData.length === 0) {
-    showAppAlert('No data available. Please load data on the View page first.', 'error');
+    await taAlert('No data available. Please load data on the View page first.', 'error');
     return;
   }
 
   const downloadBtnEl = document.getElementById('downloadBtn');
-  downloadBtnEl.disabled = true;
-  downloadBtnEl.textContent = '⏳ Loading PDF engine...';
+  if (downloadBtnEl) {
+    downloadBtnEl.disabled = true;
+    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
+  }
 
   const ready = await waitForPdfLibs();
   if (!ready) {
-    downloadBtnEl.disabled = false;
-    downloadBtnEl.textContent = '⬇️ Download';
-    await showAppAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are uploaded in the same folder as index.html, or check your internet connection.', 'error');
+    if (downloadBtnEl) {
+      downloadBtnEl.disabled = false;
+      downloadBtnEl.textContent = '⬇️ Download';
+    }
+    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are included in your HTML or loaded via CDN.', 'error');
     return;
   }
 
-  downloadBtnEl.textContent = '⏳ Generating PDF...';
-
-  const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
-  const trips = sorted.map(taBuildTrip);
-
-  const header = {
-    pfNo: employeeData.PF_No || '',
-    billUnit: employeeData.Bill_Unit || '',
-    mob: employeeData.Mob_No || '',
-    sri: displayName,
-    allowanceMonth: monthSelect.value,
-    designation: employeeData.Designation || '',
-    pay: employeeData.Basic_Pay || '',
-    scaleOfPay: employeeData.Scale || '',
-    appointmentDate: employeeData.Date_Of_Appointment || ''
-  };
-
-  const bodyHtml = taBuildAllPages(trips, header);
-
-  const container = document.getElementById('pdf-template');
-  container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
-  container.style.cssText = `
-    display:block; position:fixed; top:0; left:0;
-    width:1123px; background:#fff; z-index:9998;
-    overflow:visible; margin:0; padding:0;
-  `;
+  if (downloadBtnEl) downloadBtnEl.textContent = '⏳ Generating PDF...';
 
   const spinnerOverlay = document.createElement('div');
   spinnerOverlay.id = 'pdf-generating-overlay';
@@ -565,7 +569,36 @@ async function downloadTAPdfDirect() {
   document.body.appendChild(spinnerOverlay);
   const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
 
+  const container = document.getElementById('pdf-template');
+
   try {
+    const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
+    const trips = sorted.map(taBuildTrip);
+
+    const header = {
+      pfNo: (typeof employeeData !== 'undefined' && employeeData.PF_No) || '',
+      billUnit: (typeof employeeData !== 'undefined' && employeeData.Bill_Unit) || '',
+      mob: (typeof employeeData !== 'undefined' && employeeData.Mob_No) || '',
+      sri: typeof displayName !== 'undefined' ? displayName : '',
+      allowanceMonth: (typeof monthSelect !== 'undefined' && monthSelect.value) || '',
+      designation: (typeof employeeData !== 'undefined' && employeeData.Designation) || '',
+      pay: (typeof employeeData !== 'undefined' && employeeData.Basic_Pay) || '',
+      scaleOfPay: (typeof employeeData !== 'undefined' && employeeData.Scale) || '',
+      appointmentDate: (typeof employeeData !== 'undefined' && employeeData.Date_Of_Appointment) || ''
+    };
+
+    const bodyHtml = taBuildAllPages(trips, header);
+
+    container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
+    container.style.cssText = `
+      display:block; position:fixed; top:0; left:0;
+      width:1123px; background:#fff; z-index:9998;
+      overflow:visible; margin:0; padding:0;
+    `;
+
+    // Wait 100ms for DOM layout rendering before capturing canvas
+    await new Promise(r => setTimeout(r, 100));
+
     const pageEls = container.querySelectorAll('.page');
     if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
 
@@ -573,8 +606,8 @@ async function downloadTAPdfDirect() {
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
     const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
-    const MAX_W = PAGE_W - MARGIN * 2;   // 281
-    const MAX_H = PAGE_H - MARGIN * 2;   // 194
+    const MAX_W = PAGE_W - MARGIN * 2;   // 281mm
+    const MAX_H = PAGE_H - MARGIN * 2;   // 194mm
 
     for (let i = 0; i < pageEls.length; i++) {
       progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
@@ -603,19 +636,25 @@ async function downloadTAPdfDirect() {
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
     }
 
-    const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
-    const safeName = displayName.replace(/\s+/g, '_');
+    const monthVal = (typeof monthSelect !== 'undefined' && monthSelect.value) ? monthSelect.value : 'TA';
+    const nameVal = typeof displayName !== 'undefined' ? displayName : 'User';
+    const safeMonth = monthVal.replace(/\s+/g, '_');
+    const safeName = nameVal.replace(/\s+/g, '_');
+    
     pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
 
   } catch (err) {
     console.error('PDF generation failed:', err);
-    await showAppAlert('PDF generation failed: ' + (err.message || err), 'error');
+    await taAlert('PDF generation failed: ' + (err.message || err), 'error');
   } finally {
-    container.style.display = 'none';
-    container.innerHTML = '';
-    spinnerOverlay.remove();
-    downloadBtnEl.disabled = false;
-    downloadBtnEl.textContent = '⬇️ Download';
+    if (container) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+    if (spinnerOverlay) spinnerOverlay.remove();
+    if (downloadBtnEl) {
+      downloadBtnEl.disabled = false;
+      downloadBtnEl.textContent = '⬇️ Download';
+    }
   }
 }
-
