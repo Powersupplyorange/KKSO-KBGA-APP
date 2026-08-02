@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>PDF Test</title></head>
+<body style="font-family:sans-serif; padding:20px;">
+  <h2>PDF Library Diagnostic Test</h2>
+  <div id="log" style="white-space:pre-wrap; background:#eee; padding:10px; border-radius:8px;"></div>
+  <button onclick="runTest()" style="padding:12px 20px; font-size:16px; margin-top:10px;">Run Test</button>
+
+  <script src="./html2canvas.min.js" onerror="document.getElementById('log').textContent+='\n❌ html2canvas.min.js FILE NOT FOUND in folder'"></script>
+  <script src="./jspdf.umd.min.js" onerror="document.getElementById('log').textContent+='\n❌ jspdf.umd.min.js FILE NOT FOUND in folder'"></script>
+
+  <script>
+    const log = document.getElementById('log');
+    function addLog(msg) { log.textContent += '\n' + msg; }
+
+    addLog('Page loaded. Checking libraries...');
+    addLog('html2canvas defined? ' + (typeof html2canvas !== 'undefined'));
+    addLog('jspdf defined? ' + (typeof window.jspdf !== 'undefined'));
+    if (window.jspdf) addLog('jsPDF constructor? ' + (typeof window.jspdf.jsPDF !== 'undefined'));
+
+    async function runTest() {
+      addLog('\n--- Running full test ---');
+      try {
+        const testDiv = document.createElement('div');
+        testDiv.style.cssText = 'width:300px;padding:20px;background:#fff;border:2px solid black;';
+        testDiv.innerHTML = '<h3>Test Content</h3><p>If you see this in the PDF, rendering works.</p>';
+        document.body.appendChild(testDiv);
+
+        addLog('Step 1: Capturing with html2canvas...');
+        const canvas = await html2canvas(testDiv);
+        addLog('✅ html2canvas succeeded. Canvas size: ' + canvas.width + 'x' + canvas.height);
+
+        addLog('Step 2: Creating jsPDF...');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        addLog('✅ jsPDF created.');
+
+        addLog('Step 3: Adding image...');
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        pdf.addImage(imgData, 'JPEG', 10, 10, 100, 50);
+        addLog('✅ Image added.');
+
+        addLog('Step 4: Saving PDF...');
+        pdf.save('test.pdf');
+        addLog('✅✅✅ SUCCESS! Check your Downloads folder for test.pdf');
+
+        testDiv.remove();
+      } catch (err) {
+        addLog('❌ ERROR: ' + err.message);
+        addLog('Stack: ' + err.stack);
+      }
+    }
+  </script>
+</body>
+</html>
