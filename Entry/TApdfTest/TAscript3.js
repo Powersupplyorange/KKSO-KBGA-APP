@@ -405,7 +405,7 @@ function renderSummary(data) {
 }
 
 function generatePDF() {
-  generateAndOpenTAPdf();
+  downloadTAPdfDirect();   // ✅ now downloads a real PDF file directly — no print dialog needed
 }
 
 function initView() {
