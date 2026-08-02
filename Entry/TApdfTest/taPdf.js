@@ -487,18 +487,41 @@ function generateAndOpenTAPdf() {
   pdfWindow.document.write(fullDoc);
   pdfWindow.document.close();
 }
-// ===================== DIRECT PDF DOWNLOAD (no print dialog) =====================
-function downloadTAPdfDirect() {
+// ===================== DIRECT PDF DOWNLOAD (no print dialog) — FIXED VERSION =====================
+
+// Waits (up to ~4s) for html2pdf to finish loading via the CDN-fallback loader in index.html
+function waitForHtml2Pdf(maxWaitMs = 4000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    (function check() {
+      if (typeof html2pdf !== 'undefined') return resolve(true);
+      if (window.__html2pdfLoaded === false) return resolve(false); // all sources failed
+      if (Date.now() - start > maxWaitMs) return resolve(typeof html2pdf !== 'undefined');
+      setTimeout(check, 150);
+    })();
+  });
+}
+
+async function downloadTAPdfDirect() {
   if (!currentFilteredData || currentFilteredData.length === 0) {
-    alert('No data available. Please load data on the View page first.');
+    showAppAlert('No data available. Please load data on the View page first.', 'error');
     return;
   }
 
-  if (typeof html2pdf === 'undefined') {
-    alert('PDF engine failed to load (check internet connection). Opening print-preview instead.');
-    generateAndOpenTAPdf(); // fallback to the print-window method
+  const downloadBtnEl = document.getElementById('downloadBtn');
+  downloadBtnEl.disabled = true;
+  downloadBtnEl.textContent = '⏳ Loading PDF engine...';
+
+  const ready = await waitForHtml2Pdf();
+  if (!ready) {
+    downloadBtnEl.disabled = false;
+    downloadBtnEl.textContent = '⬇️ Download';
+    await showAppAlert('PDF engine could not be loaded (no internet or blocked). Opening print-preview instead — use "Save as PDF" there.', 'error');
+    generateAndOpenTAPdf();
     return;
   }
+
+  downloadBtnEl.textContent = '⏳ Generating PDF...';
 
   const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
   const trips = sorted.map(taBuildTrip);
@@ -517,43 +540,65 @@ function downloadTAPdfDirect() {
 
   const bodyHtml = taBuildAllPages(trips, header);
 
-  // Build a hidden, off-screen container (must be in DOM & visible-to-renderer,
-  // just positioned outside the viewport so the user never sees it flash)
+  // ---- FIX: render as a VISIBLE full-screen overlay (not off-screen) ----
+  // Off-screen negative positioning (left:-99999px) can cause html2canvas to
+  // mis-measure width/height on mobile browsers. A visible overlay (behind a
+  // "Generating..." spinner) renders identically to a normal on-screen element,
+  // which html2canvas captures reliably on all devices.
   const container = document.getElementById('pdf-template');
   container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
-  container.style.display = 'block';
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '-99999px';
-  container.style.zIndex = '-1';
+  container.style.cssText = `
+    display:block; position:fixed; top:0; left:0;
+    width:1063px; background:#fff; z-index:9998;
+    overflow:visible; margin:0; padding:0;
+  `;
 
-  const downloadBtnEl = document.getElementById('downloadBtn');
-  downloadBtnEl.disabled = true;
-  downloadBtnEl.textContent = '⏳ Generating PDF...';
+  // Loading spinner overlay on top, so the user sees a clean "Generating..." screen
+  // instead of the raw unstyled A4 layout flashing by.
+  const spinnerOverlay = document.createElement('div');
+  spinnerOverlay.id = 'pdf-generating-overlay';
+  spinnerOverlay.style.cssText = `
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(26,26,46,0.92); z-index:9999;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; font-family:Arial, sans-serif;
+  `;
+  spinnerOverlay.innerHTML = `
+    <div style="font-size:40px; margin-bottom:12px;">⏳</div>
+    <div style="font-size:15px; font-weight:700;">Generating PDF, please wait...</div>
+  `;
+  document.body.appendChild(spinnerOverlay);
 
   const safeMonth = (monthSelect.value || 'TA').replace(/\s+/g, '_');
   const safeName = displayName.replace(/\s+/g, '_');
 
   const opt = {
-    margin: 8, // mm — matches the visual look of the print-preview version
+    margin: 8,
     filename: `TA_${safeName}_${safeMonth}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, // ✅ forces landscape, no dialog
-    pagebreak: { mode: ['css', 'legacy'] } // respects our .page{page-break-after:always}
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      windowWidth: 1200,          // FIX: forces desktop-width rendering regardless of mobile viewport
+      scrollX: 0,
+      scrollY: 0
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+    pagebreak: { mode: ['css', 'legacy'] }
   };
 
-  html2pdf().set(opt).from(container).save()
-    .then(() => {
-      container.style.display = 'none';
-      container.innerHTML = '';
-    })
-    .catch(err => {
-      console.error('PDF generation failed:', err);
-      alert('PDF generation failed. Please try again or use Print instead.');
-    })
-    .finally(() => {
-      downloadBtnEl.disabled = false;
-      downloadBtnEl.textContent = '⬇️ Download';
-    });
+  try {
+    await html2pdf().set(opt).from(container).save();
+  } catch (err) {
+    console.error('PDF generation failed:', err);
+    await showAppAlert('PDF generation failed. Please try again or use Print instead.', 'error');
+  } finally {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    spinnerOverlay.remove();
+    downloadBtnEl.disabled = false;
+    downloadBtnEl.textContent = '⬇️ Download';
+  }
 }
+
