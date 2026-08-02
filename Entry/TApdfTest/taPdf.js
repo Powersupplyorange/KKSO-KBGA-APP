@@ -612,6 +612,116 @@ async function downloadTAPdfDirect() {
     const MAX_W = PAGE_W - MARGIN * 2;   // 281mm
     const MAX_H = PAGE_H - MARGIN * 2;   // 194mm
 
+// Helper to safely trigger download across Desktop, Mobile, and WebViews
+function savePdfFile(pdf, filename) {
+  try {
+    // 1. Try standard jsPDF save first
+    pdf.save(filename);
+  } catch (err) {
+    console.warn('pdf.save() failed, using Blob fallback:', err);
+    try {
+      // 2. Blob fallback for Mobile Browsers / WebViews
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (blobErr) {
+      console.warn('Blob download failed, opening Data URI:', blobErr);
+      // 3. Direct Data URI fallback as last resort
+      const dataUri = pdf.output('datauristring');
+      window.open(dataUri, '_blank');
+    }
+  }
+}
+
+async function downloadTAPdfDirect() {
+  if (!currentFilteredData || currentFilteredData.length === 0) {
+    await taAlert('No data available. Please load data on the View page first.', 'error');
+    return;
+  }
+
+  const downloadBtnEl = document.getElementById('downloadBtn');
+  if (downloadBtnEl) {
+    downloadBtnEl.disabled = true;
+    downloadBtnEl.textContent = '⏳ Loading PDF engine...';
+  }
+
+  const ready = await waitForPdfLibs();
+  if (!ready) {
+    if (downloadBtnEl) {
+      downloadBtnEl.disabled = false;
+      downloadBtnEl.textContent = '⬇️ Download';
+    }
+    await taAlert('PDF engine files not found. Make sure html2canvas.min.js and jspdf.umd.min.js are loaded.', 'error');
+    return;
+  }
+
+  if (downloadBtnEl) downloadBtnEl.textContent = '⏳ Generating PDF...';
+
+  // Overlay
+  const spinnerOverlay = document.createElement('div');
+  spinnerOverlay.id = 'pdf-generating-overlay';
+  spinnerOverlay.style.cssText = `
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(26,26,46,0.92); z-index:9999;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; font-family:Arial, sans-serif;
+  `;
+  spinnerOverlay.innerHTML = `
+    <div style="font-size:40px; margin-bottom:12px;">⏳</div>
+    <div style="font-size:15px; font-weight:700;" id="pdf-progress-text">Generating PDF, please wait...</div>
+  `;
+  document.body.appendChild(spinnerOverlay);
+  const progressText = spinnerOverlay.querySelector('#pdf-progress-text');
+
+  const container = document.getElementById('pdf-template');
+
+  try {
+    const sorted = [...currentFilteredData].sort((a, b) => taParseDMY(a.Date) - taParseDMY(b.Date));
+    const trips = sorted.map(taBuildTrip);
+
+    const header = {
+      pfNo: (typeof employeeData !== 'undefined' && employeeData.PF_No) || '',
+      billUnit: (typeof employeeData !== 'undefined' && employeeData.Bill_Unit) || '',
+      mob: (typeof employeeData !== 'undefined' && employeeData.Mob_No) || '',
+      sri: typeof displayName !== 'undefined' ? displayName : '',
+      allowanceMonth: (typeof monthSelect !== 'undefined' && monthSelect.value) || '',
+      designation: (typeof employeeData !== 'undefined' && employeeData.Designation) || '',
+      pay: (typeof employeeData !== 'undefined' && employeeData.Basic_Pay) || '',
+      scaleOfPay: (typeof employeeData !== 'undefined' && employeeData.Scale) || '',
+      appointmentDate: (typeof employeeData !== 'undefined' && employeeData.Date_Of_Appointment) || ''
+    };
+
+    const bodyHtml = taBuildAllPages(trips, header);
+
+    // Off-screen layout container
+    container.innerHTML = `<style>${taGetPdfStyles()}</style>${bodyHtml}`;
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0;
+      width: 1123px; background: #fff; z-index: -1;
+      overflow: visible; margin: 0; padding: 0;
+    `;
+
+    // Force browser reflow to complete rendering before capturing
+    void container.offsetHeight;
+    await new Promise(r => setTimeout(r, 250));
+
+    const pageEls = container.querySelectorAll('.page');
+    if (pageEls.length === 0) throw new Error('No page content was generated (0 pages found).');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+    const PAGE_W = 297, PAGE_H = 210, MARGIN = 8;
+    const MAX_W = PAGE_W - MARGIN * 2;   // 281mm
+    const MAX_H = PAGE_H - MARGIN * 2;   // 194mm
+
     for (let i = 0; i < pageEls.length; i++) {
       progressText.textContent = `Generating PDF... (page ${i + 1} of ${pageEls.length})`;
 
@@ -625,9 +735,8 @@ async function downloadTAPdfDirect() {
         windowWidth: 1123
       });
 
-      // Guard against 0 dimensions
       if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        console.warn(`Page ${i + 1} produced zero dimensions. Skipping page.`);
+        console.warn(`Page ${i + 1} produced zero dimensions. Skipping.`);
         continue;
       }
 
@@ -643,7 +752,7 @@ async function downloadTAPdfDirect() {
       let xOffset = MARGIN + (MAX_W - renderW) / 2;
       let yOffset = MARGIN;
 
-      // Sanitize inputs for jsPDF
+      // Sanitize coordinates
       renderW = Number.isFinite(renderW) && renderW > 0 ? renderW : MAX_W;
       renderH = Number.isFinite(renderH) && renderH > 0 ? renderH : MAX_H;
       xOffset = Number.isFinite(xOffset) ? xOffset : MARGIN;
@@ -655,12 +764,16 @@ async function downloadTAPdfDirect() {
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderW, renderH);
     }
 
+    progressText.textContent = 'Saving PDF...';
+
     const monthVal = (typeof monthSelect !== 'undefined' && monthSelect.value) ? monthSelect.value : 'TA';
     const nameVal = typeof displayName !== 'undefined' ? displayName : 'User';
-    const safeMonth = monthVal.replace(/\s+/g, '_');
-    const safeName = nameVal.replace(/\s+/g, '_');
+    const safeMonth = monthVal.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeName = nameVal.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `TA_${safeName}_${safeMonth}.pdf`;
 
-    pdf.save(`TA_${safeName}_${safeMonth}.pdf`);
+    // Multi-fallback save trigger
+    savePdfFile(pdf, filename);
 
   } catch (err) {
     console.error('PDF generation failed:', err);
