@@ -123,6 +123,8 @@
 <!-- ===== PDF Engine loaders (self-hosted first, then CDN fallback) ===== -->
 <script>
   function loadScript(sources, index, globalCheckFn, onDone) {
+<script>
+  function loadScript(sources, index, globalCheckFn, onDone) {
     if (index >= sources.length) { onDone(false); return; }
     if (globalCheckFn()) { onDone(true); return; }
     const s = document.createElement('script');
@@ -132,14 +134,7 @@
     document.head.appendChild(s);
   }
 
-  window.__html2canvasLoaded = false;
   window.__jsPDFLoaded = false;
-
-  loadScript([
-    './html2canvas.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
-  ], 0, () => typeof html2canvas !== 'undefined', (ok) => { window.__html2canvasLoaded = ok; });
 
   loadScript([
     './jspdf.umd.min.js',
