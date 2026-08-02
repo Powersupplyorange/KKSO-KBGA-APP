@@ -400,13 +400,13 @@ function taBuildFullDocument(bodyHtml) {
      content from overflowing into extra blank pages. */
   .page {
     width: 281mm;
-    max-height: 194mm;
     margin: 0 auto 4mm auto;
     background: #fff;
     padding: 0;
     position: relative;
     page-break-after: always;
-    overflow: hidden; /* safety net: clip instead of spilling a blank page */
+    /*overflow: hidden; */
+    /* safety net: clip instead of spilling a blank page */
   }
   .page:last-child { page-break-after: auto; margin-bottom:0; }
 
@@ -418,7 +418,7 @@ function taBuildFullDocument(bodyHtml) {
   .info-table td { padding: 2px 0; font-size: 11px; line-height: 1.6; word-spacing: 3px; text-align: justify; }
   .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
 
-  table.ta-table { width: 281mm; border-collapse: collapse; table-layout: fixed; }
+  table.ta-table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.2px solid #000; }
   table.ta-table th, table.ta-table td { border: 1px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 9.3px; word-wrap: break-word; }
   table.ta-table th { font-weight: bold; background: #f2f2f2; }
   table.ta-table thead tr { height: 6mm; }
