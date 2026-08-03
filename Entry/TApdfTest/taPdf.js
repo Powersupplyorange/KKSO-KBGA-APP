@@ -414,7 +414,7 @@ function taGetPdfStyles() {
 
     .cert-block { margin-top: 12px; font-size: 12px; line-height: 1.6; text-align: justify; padding: 0 6px; }
     .signrow { display: flex; justify-content: space-between; margin-top: 60px; font-size: 15px; font-weight: bold; }
-    .signrow div { text-align: center; width: 22%; border-top: 3px solid #000; padding-top: 5px; }
+    .signrow div { text-align: center; width: 22%; border-top: 2px solid #000; padding-top: 5px; }
     .signrow div span.label { display:block; text-decoration: underline; }
     .notes { margin-top: 10px; font-size: 12px; line-height: 0.9; }
     .total-words-text { font-size: 15px; }
