@@ -246,13 +246,13 @@ function taBuildHeaderBlock(h) {
     <p class="subtitle">TRAVELLING ALLOWANCE JOURNAL</p>
     <div class="info-container">
       <table class="info-table">
-        <tr><td><b>ELECTRICAL</b> Branch <b>METRO RAILWAY</b> Division Headquarters at
+        <tr><td><b>ELECTRICAL</b> Branch <b>METRO RAILWAY</b> Division Headquarters at duty performed by 
           <b>SSE/M/KKSO</b> journal of </td></tr>
-        <tr><td>duty performed by Sri <span class="field" style="min-width:170px;">${h.sri}</span> which allowance for <span class="field" style="min-width:140px;">${h.allowanceMonth}</span>
-          Designation <span class="field" style="min-width:100px;">${h.designation}</span></td></tr>
+        <tr><td>Sri:- <span class="field" style="min-width:120px;">${h.sri}</span> which allowance for:- <span class="field" style="min-width:100px;">${h.allowanceMonth}</span>
+          Designation:- <span class="field" style="min-width:100px;">${h.designation}</span></td></tr>
         <tr><td>
-          Pay <span class="field" style="min-width:90px;">${h.pay}</span>Scale of Pay <span class="field" style="min-width:70px;">${h.scaleOfPay}</span>
-          Date. of. appointment <span class="field" style="min-width:100px;">${h.appointmentDate}</span>
+          Pay:- <span class="field" style="min-width:90px;">${h.pay}</span>Scale of Pay:- <span class="field" style="min-width:70px;">${h.scaleOfPay}</span>
+          Date. of. appointment:- <span class="field" style="min-width:100px;">${h.appointmentDate}</span>
           Rule by which governed <b>SR.T.A.</b></td></tr>
       </table>
     </div>`;
