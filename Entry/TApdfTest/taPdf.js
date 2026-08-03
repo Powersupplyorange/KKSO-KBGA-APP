@@ -398,9 +398,9 @@ function taGetPdfStyles() {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      border: 2px solid #000;
+      border: 1.2px solid #000;
     }
-    table.ta-table th, table.ta-table td { border: 2px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 10px; word-wrap: break-word; }
+    table.ta-table th, table.ta-table td { border: 1.2px solid #000; padding: 1.5px 2px; text-align: center; vertical-align: middle; overflow: hidden; font-size: 12px; word-wrap: break-word; }
     table.ta-table th { font-weight: bold; background: #f2f2f2; }
     table.ta-table thead tr { height: 6mm; }
     table.ta-table tbody tr { height: 7.8mm; }
