@@ -391,7 +391,7 @@ function taGetPdfStyles() {
     .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 0 0 10px 0; }
     .info-container { padding: 0 100px; margin-bottom: 12px; }
     .info-table { width: 100%; border-collapse: collapse; }
-    .info-table td { padding: 2px 0; font-size: 13px; line-height: 1.8; word-spacing: 3px; text-align: justify; }
+    .info-table td { padding: 2px 0; font-size: 15px; line-height: 1.8; word-spacing: 3px; text-align: justify; }
     .field { display: inline-block; min-width: 95px; border-bottom: 0px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
 
     table.ta-table {
