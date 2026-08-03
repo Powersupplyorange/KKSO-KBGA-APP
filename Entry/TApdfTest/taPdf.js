@@ -247,11 +247,11 @@ function taBuildHeaderBlock(h) {
     <div class="info-container">
       <table class="info-table">
         <tr><td><b>ELECTRICAL</b> Branch <b>METRO RAILWAY</b> Division Headquarters at
-          <b>SSE/M/KKSO</b> journal of duty performed by Sri <span class="field" style="min-width:170px;">${h.sri}</span></td></tr>
-        <tr><td>which allowance for <span class="field" style="min-width:170px;">${h.allowanceMonth}</span>
-          Designation <span class="field" style="min-width:170px;">${h.designation}</span>
-          Pay <span class="field" style="min-width:110px;">${h.pay}</span></td></tr>
-        <tr><td>Scale of Pay <span class="field" style="min-width:70px;">${h.scaleOfPay}</span>
+          <b>SSE/M/KKSO</b> journal of </td></tr>
+        <tr><td>duty performed by Sri <span class="field" style="min-width:170px;">${h.sri}</span> which allowance for <span class="field" style="min-width:140px;">${h.allowanceMonth}</span>
+          Designation <span class="field" style="min-width:100px;">${h.designation}</span></td></tr>
+        <tr><td>
+          Pay <span class="field" style="min-width:90px;">${h.pay}</span>Scale of Pay <span class="field" style="min-width:70px;">${h.scaleOfPay}</span>
           Date. of. appointment <span class="field" style="min-width:100px;">${h.appointmentDate}</span>
           Rule by which governed <b>SR.T.A.</b></td></tr>
       </table>
@@ -392,7 +392,7 @@ function taGetPdfStyles() {
     .info-container { padding: 0 100px; margin-bottom: 12px; }
     .info-table { width: 100%; border-collapse: collapse; }
     .info-table td { padding: 2px 0; font-size: 13px; line-height: 1.8; word-spacing: 3px; text-align: justify; }
-    .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
+    .field { display: inline-block; min-width: 95px; border-bottom: 0px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
 
     table.ta-table {
       width: 100%;
