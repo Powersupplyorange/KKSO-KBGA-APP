@@ -1062,7 +1062,7 @@ const btnSubmit = document.getElementById('btnSubmit');
   submitStatus.textContent = 'Submitting...';
   submitStatus.className = 'loading';
  
-
+const timeStamp = getCurrentstamp();
 
   try {
     const response = await fetch('https://keyps.powersupplyorange.workers.dev', {
@@ -1079,8 +1079,8 @@ const btnSubmit = document.getElementById('btnSubmit');
         attendedByStaff : attendedBy.join(', '),
         cheksheet:'',
         remark: remarks.join('  |  '),
-        nameOfEntry:loggedInUser + ',' +loggedInLevel + ',' + timeStamp,
-        staffLevel: '',
+        nameOfEntry:loggedInUser,
+        staffLevel: timeStamp,
         }
       })
     });
