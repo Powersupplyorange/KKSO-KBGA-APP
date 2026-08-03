@@ -412,12 +412,12 @@ function taGetPdfStyles() {
     .bf-row td { font-weight: bold; }
     .cf-row td { padding: 2px 4px; }
 
-    .cert-block { margin-top: 15px; font-size: 15px; line-height: 1.6; text-align: justify; padding: 0 8px; }
+    .cert-block { margin-top: 12px; font-size: 12px; line-height: 1.6; text-align: justify; padding: 0 6px; }
     .signrow { display: flex; justify-content: space-between; margin-top: 60px; font-size: 15px; font-weight: bold; }
     .signrow div { text-align: center; width: 22%; border-top: 3px solid #000; padding-top: 5px; }
     .signrow div span.label { display:block; text-decoration: underline; }
     .notes { margin-top: 8px; font-size: 10px; line-height: 0.9; }
-    .total-words-text { font-size: 13px; }
+    .total-words-text { font-size: 15px; }
 
     .toolbar-fixed {
       position: fixed; top: 0; left: 0; width: 100%; z-index: 999;
