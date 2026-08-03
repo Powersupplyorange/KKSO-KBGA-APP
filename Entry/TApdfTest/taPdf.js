@@ -389,9 +389,9 @@ function taGetPdfStyles() {
     .top-right { text-align: right; font-size: 12px; line-height: 1.5; font-weight: bold; }
     .title { text-align: center; font-weight: bold; text-decoration: underline; font-size: 20px; margin: 3px 0 1px 0; }
     .subtitle { text-align: center; font-weight: bold; text-decoration: underline; font-size: 17px; margin: 0 0 10px 0; }
-    .info-container { padding: 0 100px; margin-bottom: 10px; }
+    .info-container { padding: 0 100px; margin-bottom: 12px; }
     .info-table { width: 100%; border-collapse: collapse; }
-    .info-table td { padding: 2px 0; font-size: 12px; line-height: 1.8; word-spacing: 3px; text-align: justify; }
+    .info-table td { padding: 2px 0; font-size: 15px; line-height: 1.8; word-spacing: 3px; text-align: justify; }
     .field { display: inline-block; min-width: 95px; border-bottom: 1px solid #000; padding: 0 6px; font-weight: bold; text-align: center; margin: 0 4px; }
 
     table.ta-table {
@@ -416,7 +416,7 @@ function taGetPdfStyles() {
     .signrow { display: flex; justify-content: space-between; margin-top: 60px; font-size: 15px; font-weight: bold; }
     .signrow div { text-align: center; width: 22%; border-top: 3px solid #000; padding-top: 5px; }
     .signrow div span.label { display:block; text-decoration: underline; }
-    .notes { margin-top: 8px; font-size: 10px; line-height: 0.9; }
+    .notes { margin-top: 8px; font-size: 12px; line-height: 0.9; }
     .total-words-text { font-size: 15px; }
 
     .toolbar-fixed {
