@@ -1077,8 +1077,8 @@ const btnSubmit = document.getElementById('btnSubmit');
         attendedByStaff : attendedBy.join(', '),
         cheksheet:'',
         remark: remarks.join('  |  '),
-        nameOfEntry:loggedInUser,
-        staffLevel: loggedInLevel,
+        nameOfEntry:loggedInUser + ','+loggedInLevel,
+        staffLevel: "",
         }
       })
     });
