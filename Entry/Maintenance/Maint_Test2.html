@@ -1079,8 +1079,8 @@ const timeStamp = getCurrentstamp();
         attendedByStaff : attendedBy.join(', '),
         cheksheet:'',
         remark: remarks.join('  |  '),
-        nameOfEntry:loggedInUser,
-        staffLevel: timeStamp,
+        nameOfEntry:loggedInUser +',' + loggedInLevel + ',' + timeStamp,
+        staffLevel: '';
         }
       })
     });
