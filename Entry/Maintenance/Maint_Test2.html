@@ -1061,9 +1061,6 @@ const btnSubmit = document.getElementById('btnSubmit');
   btnSubmit.disabled = true;
   submitStatus.textContent = 'Submitting...';
   submitStatus.className = 'loading';
-  //Time Stamp
-  const nows = new Date();
-  const timeStamps = formatDateDMY(nows) + ', ' + pad(nows.getHours()) + ':' + pad(nows.getMinutes());
  
 
 
@@ -1082,7 +1079,7 @@ const btnSubmit = document.getElementById('btnSubmit');
         attendedByStaff : attendedBy.join(', '),
         cheksheet:'',
         remark: remarks.join('  |  '),
-        nameOfEntry:loggedInUser + ',' +loggedInLevel + ',' + timeStamps,
+        nameOfEntry:loggedInUser + ',' +loggedInLevel + ',' + timeStamp,
         staffLevel: '',
         }
       })
