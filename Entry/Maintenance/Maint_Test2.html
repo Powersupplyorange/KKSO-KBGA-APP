@@ -366,7 +366,7 @@ const loggedInUser = getUrlParam('user');
 const loggedInLevel = getUrlParam('level');
 const parentSheet = getUrlParam('sheet');
 
-function getCurrentTimestamp() {
+function getCurrentstamp() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB');
   const timeStr = now.toLocaleTimeString('en-US', {
@@ -376,7 +376,7 @@ function getCurrentTimestamp() {
   });
   return `${dateStr}, ${timeStr}`;
 }
-
+ 
 /* ============================================================
    ASSET ID DECODE / VALIDATE
 ============================================================ */
@@ -1061,6 +1061,12 @@ const btnSubmit = document.getElementById('btnSubmit');
   btnSubmit.disabled = true;
   submitStatus.textContent = 'Submitting...';
   submitStatus.className = 'loading';
+  //Time Stamp
+  const now = new Date();
+  const timeStamp = formatDateDMY(now) + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  const dateFormatted = formatDateDMY(new Date(fldDate.value));
+  const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+
 
   try {
     const response = await fetch('https://keyps.powersupplyorange.workers.dev', {
@@ -1077,8 +1083,8 @@ const btnSubmit = document.getElementById('btnSubmit');
         attendedByStaff : attendedBy.join(', '),
         cheksheet:'',
         remark: remarks.join('  |  '),
-        nameOfEntry:loggedInUser + ','+loggedInLevel,
-        staffLevel: "",
+        nameOfEntry:loggedInUser + ',' +loggedInLevel + ',' + timeStamp,
+        staffLevel: '',
         }
       })
     });
