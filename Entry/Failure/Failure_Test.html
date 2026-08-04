@@ -1144,21 +1144,25 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  const attendedBy = staffSelects.map(s => s.value);
  const timeStamp = getCurrentTimestamp();
 
-  const dataFields = {
- assetIdNo: currentAssetId,
- dateOfFailure: toDDMMYY(dateInput.value),
- fault: faultInput.value.trim(),
- reportedBy: reportedBySelect.value,
- repercussion: repercussionInput.value.trim(),
- causeOfFailure: causeInput.value.trim(),
- actionTaken: actionInput.value.trim(),
- attendedByStaff: attendedBy.join(', '),
- rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
- entryDetails: currentMode === 'entry' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : '',
- editDetails: currentMode === 'edit' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : ''
- 
- };
+  const timeStamp = getCurrentTimestamp();
 
+// Column J (entryDetails) is at index 9
+const existingEntryDetails = editSelectedRow && editSelectedRow[9] ? editSelectedRow[9] : '';
+
+const dataFields = {
+  assetIdNo: currentAssetId,
+  dateOfFailure: toDDMMYY(dateInput.value),
+  fault: faultInput.value.trim(),
+  reportedBy: reportedBySelect.value,
+  repercussion: repercussionInput.value.trim(),
+  causeOfFailure: causeInput.value.trim(),
+  actionTaken: actionInput.value.trim(),
+  attendedByStaff: attendedBy.join(', '),
+  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
+  entryDetails: currentMode === 'entry' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : existingEntryDetails,
+  editDetails: currentMode === 'edit' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : ''
+};
+ 
  if (currentMode === 'edit' && editSelectedRow) {
  dataFields.originalFailureDate = editSelectedRow[1] || '';
  }
