@@ -1142,7 +1142,8 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  }
 
  const attendedBy = staffSelects.map(s => s.value);
- const timeStamp = getCurrentTimestamp();
+ //---------------------------------------------------------------------------------------------------------------------------------
+const timeStamp = getCurrentTimestamp();
 
 const dataFields = {
   assetIdNo: currentAssetId,
@@ -1160,11 +1161,15 @@ if (currentMode === 'entry') {
   dataFields.entryDetails = currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp;
   dataFields.editDetails = '';
 } else if (currentMode === 'edit') {
-  // Pass existing entry details from loaded row, or omit if Worker supports partial updates
-  dataFields.entryDetails = (editSelectedRow && editSelectedRow[9]) ? editSelectedRow[9] : '';
+  // Check object property first, then array index 9, fallback to preserving if existing
+  const existingEntry = editSelectedRow 
+    ? (editSelectedRow.entryDetails || editSelectedRow[9] || '') 
+    : '';
+
+  dataFields.entryDetails = existingEntry;
   dataFields.editDetails = currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp;
 }
- 
+//--------------------------------------------------------------------------------------------------------------------------------------- 
  if (currentMode === 'edit' && editSelectedRow) {
  dataFields.originalFailureDate = editSelectedRow[1] || '';
  }
