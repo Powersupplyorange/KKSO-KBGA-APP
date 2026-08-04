@@ -18,14 +18,83 @@
  --shadow-md:0 6px 18px rgba(15,23,42,0.08);
  --shadow-lg:0 14px 34px rgba(15,23,42,0.14);
  }
- *{ box-sizing:border-box; }
- body{
- font-family:'Poppins', sans-serif;
- background:var(--bg);
- margin:0;
- color:var(--text-main);
- -webkit-tap-highlight-color: transparent;
- }
+ :root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --secondary: #06b6d4;
+  --success: #10b981;
+  --success-dark: #059669;
+  --danger: #ef4444;
+  --danger-dark: #dc2626;
+  --warning: #f59e0b;
+  --bg: #eef1f8;
+  --card-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 4px rgba(15,23,42,0.06);
+  --shadow-md: 0 6px 18px rgba(15,23,42,0.08);
+  --shadow-lg: 0 14px 34px rgba(15,23,42,0.14);
+}
+
+/* --- ADD YOUR STYLES HERE --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-main);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #5ee7df 75%, #667eea 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Animations */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes rainbowText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@keyframes driveGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
  .appHeader{
  position:sticky; top:0; z-index:200;
  background:linear-gradient(135deg, var(--primary), var(--secondary));
