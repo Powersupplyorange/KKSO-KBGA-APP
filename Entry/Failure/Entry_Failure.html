@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Failure_Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="Entry_Failure.css" />
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="../../Entry/Mapping_Maint_&_Failure.js"></script>
+</head>
+<body>
+<div class="appHeader">
+ <div class="appHeaderInner">
+ <div class="appTitle">🛠 Failure Logger</div>
+ <div class="modeToggleWrap">
+ <button type="button" id="modeEntryBtn" class="modeBtn active">📝 Entry</button>
+ <button type="button" id="modeEditBtn" class="modeBtn">✏️ Edit</button>
+ </div>
+ </div>
+</div>
+
+<div id="entryPage" class="page active">
+ <h1>Failure Entry Page</h1>
+ <div class="section">
+ <label class="title">📷 By Scan QR Code</label>
+ <button id="btnScanQr" type="button">Scan QR</button>
+ <div id="qrReaderContainer" style="display:none;">
+ <video id="qrVideo" playsinline autoplay muted></video>
+ <canvas id="qrCanvas" style="display:none;"></canvas>
+ <button id="btnCancelScan" type="button">Cancel</button>
+ </div>
+ <div id="qrResult"></div>
+ <div id="qrError" class="error"></div>
+ <div id="qrHint">Camera requires HTTPS (or localhost) and permission access.</div>
+ </div>
+ <div class="divider">OR</div>
+ <div class="section">
+ <label class="title">🔢 By Asset Id</label>
+ <div class="row">
+ <input type="text" id="assetIdInput" maxlength="9" placeholder="Enter 9-digit Asset Id" inputmode="numeric">
+ <button id="btnGetFormById" type="button">Get Form</button>
+ </div>
+ <div id="assetIdError" class="error"></div>
+ </div>
+ <div class="divider">OR</div>
+ <div class="section">
+ <label class="title">📋 By Dropdown Selection</label>
+ <label class="sub">Station</label>
+ <select id="ddStation"><option value="">Select Station</option></select>
+ <label class="sub">Group</label>
+ <select id="ddGroup" disabled><option value="">Select Group</option></select>
+ <label class="sub">Sub-Group</label>
+ <select id="ddSubGroup" disabled><option value="">Select Sub-Group</option></select>
+ <label class="sub">Equipment Name</label>
+ <select id="ddEquipment" disabled><option value="">Select Equipment</option></select>
+ <button id="btnGetFormByDropdown" type="button" style="width:100%; margin-top:12px;">Get Form</button>
+ <div id="dropdownError" class="error"></div>
+ </div>
+</div>
+
+<div id="formPage" class="page">
+ <h1>Failure Entry Form</h1>
+
+ <div class="lockBanner" id="editModeBanner">
+ <div>
+ <b id="editModeTitle">✏️ Edit Mode Active</b>
+ <span id="editModeStatus">Loading failure record...</span>
+ </div>
+ </div>
+
+ <div class="formGroup" id="selectFailureDateGroup" style="display:none;">
+ <label>Select Failure Date *</label>
+ <select id="selectFailureDate"><option value="">Select Failure Date</option></select>
+ </div>
+
+ <div class="infoBox">
+ <div class="infoRow"><span class="k">Asset Id:</span><span class="v" id="infoAssetId">-</span></div>
+ <div class="infoRow"><span class="k">Station:</span><span class="v" id="infoStation">-</span></div>
+ <div class="infoRow"><span class="k">Group:</span><span class="v" id="infoGroup">-</span></div>
+ <div class="infoRow"><span class="k">Sub-Group:</span><span class="v" id="infoSubGroup">-</span></div>
+ <div class="infoRow"><span class="k">Equipment Name:</span><span class="v" id="infoEquipment">-</span></div>
+ </div>
+ <hr class="sep">
+
+ <button type="button" class="clearFieldsBtn" id="btnClearFields" style="width:100%; margin-bottom:14px;">↺ Clear Fields</button>
+
+ <!-- (i) Date Of Failure -->
+ <div class="formGroup">
+ <label>Date Of Failure *</label>
+ <input type="date" id="dateOfFailure">
+ <div class="fieldErr" id="dateErr"></div>
+ </div>
+
+ <!-- (ii) Fault -->
+ <div class="formGroup">
+ <label>Fault *</label>
+ <input type="text" id="faultInput" placeholder="Enter fault description">
+ <button type="button" class="editSmallBtn" id="btnEditFault" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="faultErr"></div>
+ </div>
+
+ <!-- (iii) Reported By -->
+ <div class="formGroup">
+ <label>Reported By *</label>
+ <select id="reportedBySelect"><option value="">Select Reported By</option></select>
+ <button type="button" class="editSmallBtn" id="btnEditReportedBy" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="reportedByErr"></div>
+ </div>
+
+ <!-- (iv) Repercussion -->
+ <div class="formGroup">
+ <label id="labelRepercussion">Repercussion</label>
+ <input type="text" id="repercussionInput" placeholder="Enter repercussion">
+ <button type="button" class="editSmallBtn" id="btnEditRepercussion" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="repercussionErr"></div>
+ </div>
+
+ <!-- (v) Cause Of Failure -->
+ <div class="formGroup">
+  <label id="labelCause">Cause Of Failure</label>
+ <input type="text" id="causeInput" placeholder="Enter cause of failure">
+ <button type="button" class="editSmallBtn" id="btnEditCause" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="causeErr"></div>
+ </div>
+
+ <!-- (vi) Action Taken -->
+ <div class="formGroup">
+  <label id="labelAction">Action Taken</label>
+ <input type="text" id="actionInput" placeholder="Enter action taken">
+ <button type="button" class="editSmallBtn" id="btnEditAction" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="actionErr"></div>
+ </div>
+
+ <!-- (vii) Attended By -->
+ <div class="formGroup">
+  <label id="labelAttendedBy">Attended By</label>
+ <div id="attendedByContainer"></div>
+ <button id="btnAddStaff" type="button">+ Add More</button>
+ <button type="button" class="editSmallBtn" id="btnEditAttendedBy" style="display:none;">✎ Edit</button>
+ <div class="fieldErr" id="staffErr"></div>
+ </div>
+
+ <!-- Rectification Date - Edit Mode only -->
+ <div class="formGroup" id="rectificationDateGroup" style="display:none;">
+ <label>Rectification Date *</label>
+ <input type="date" id="rectificationDate">
+ <div class="fieldErr" id="rectDateErr"></div>
+ </div>
+
+ <div id="formError" class="error" style="text-align:center;"></div>
+ <button id="btnSubmit" class="submitBtn" type="button">Submit</button>
+ <button id="btnBack" class="backBtn" type="button">← Back</button>
+ <div id="submitStatus"></div>
+</div>
+<script src="Entry_Failure.js"></script>
+</body>
+</html>
