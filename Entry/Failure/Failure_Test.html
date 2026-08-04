@@ -1142,6 +1142,7 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  }
 
  const attendedBy = staffSelects.map(s => s.value);
+ const timeStamp = getCurrentTimestamp();
 
   const dataFields = {
  assetIdNo: currentAssetId,
@@ -1153,9 +1154,9 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  actionTaken: actionInput.value.trim(),
  attendedByStaff: attendedBy.join(', '),
  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
- nameOfEntry: loggedInUser,
- staffLevel: loggedInLevel,
- formType: currentMode // 'entry' or 'edit'
+ entryDetails: currentMode === 'entry' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : '',
+ editDetails: currentMode === 'edit' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : ''
+ 
  };
 
  if (currentMode === 'edit' && editSelectedRow) {
