@@ -1144,11 +1144,6 @@ document.getElementById('btnSubmit').addEventListener('click', async () => {
  const attendedBy = staffSelects.map(s => s.value);
  const timeStamp = getCurrentTimestamp();
 
- 
- 
- // Column J (entryDetails) is at index 9
-const existingEntryDetails = editSelectedRow && editSelectedRow[9] ? editSelectedRow[9] : '';
-
 const dataFields = {
   assetIdNo: currentAssetId,
   dateOfFailure: toDDMMYY(dateInput.value),
@@ -1158,10 +1153,17 @@ const dataFields = {
   causeOfFailure: causeInput.value.trim(),
   actionTaken: actionInput.value.trim(),
   attendedByStaff: attendedBy.join(', '),
-  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : '',
-  entryDetails: currentMode === 'entry' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : existingEntryDetails,
-  editDetails: currentMode === 'edit' ? currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp : ''
+  rectificationDate: currentMode === 'edit' ? toDDMMYY(rectificationDate.value) : ''
 };
+
+if (currentMode === 'entry') {
+  dataFields.entryDetails = currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp;
+  dataFields.editDetails = '';
+} else if (currentMode === 'edit') {
+  // Pass existing entry details from loaded row, or omit if Worker supports partial updates
+  dataFields.entryDetails = (editSelectedRow && editSelectedRow[9]) ? editSelectedRow[9] : '';
+  dataFields.editDetails = currentMode + loggedInUser + '(' + loggedInLevel + ')' + timeStamp;
+}
  
  if (currentMode === 'edit' && editSelectedRow) {
  dataFields.originalFailureDate = editSelectedRow[1] || '';
