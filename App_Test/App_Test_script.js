@@ -7,7 +7,7 @@ const APP_VERSION="4.6.0";
 let CONFIG={
  SHEET_ID:"136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
  // API_KEY removed ✅ — replaced by secure Cloudflare Worker + Service Account
- WORKER_URL:"https://keyps.powersupplyorange.workers.dev", // ✅ fixed protocol
+ WORKER_URL:"https://app.powersupplyorange.workers.dev", // ✅ fixed protocol
  SHEET_NAME:"master",
  APPS_SCRIPT_URL:"https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec",
  INBOX_SHEET_NAME:"inbox",
