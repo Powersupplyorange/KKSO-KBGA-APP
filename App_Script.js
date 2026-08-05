@@ -5,24 +5,37 @@ const APP_VERSION="4.6.0";
 /* ===================== CONFIGURATION ===================== */
 /* Ravi you can change all settings here */
 let CONFIG={
-  SHEET_ID:"136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
-  API_KEY:"AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI",
-  SHEET_NAME:"master",
-  APPS_SCRIPT_URL:"https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec",
-  INBOX_SHEET_NAME:"inbox",
-  APPS_SHEET_NAME:"apps",
-  /* Ravi: Put your GitHub raw base URL here — the folder where you upload HTML files */
-  GITHUB_BASE_URL:"https://ravikumarmalhotra.github.io/KKSO-KBGA-APP/",
-  VIEW_CONFIG_START_ROW:1,
-  VIEW_CONFIG_END_ROW:50,
-  ENTRY_CONFIG_START_ROW:82,
-  ENTRY_CONFIG_END_ROW:150,
-  USER_START_ROW:51,
-  USER_END_ROW:81,
-  CONFIG_END_COL:"AG",
-  DATA_FETCH_END_COL:"AB",
-  PERSONAL_DATA_LABELS:['Full Name','Designation','Department','Phone','Email','Address','Joining Date'],
-  CREDENTIAL_CHECK_INTERVAL:3600000
+ SHEET_ID:"136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
+ // API_KEY removed ✅ — replaced by secure Cloudflare Worker + Service Account
+ WORKER_URL:"https://keyps.powersupplyorange.workers.dev", // ✅ fixed protocol
+ SHEET_NAME:"master",
+ APPS_SCRIPT_URL:"https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec",
+ INBOX_SHEET_NAME:"inbox",
+ APPS_SHEET_NAME:"apps",
+ GITHUB_BASE_URL:"https://ravikumarmalhotra.github.io/KKSO-KBGA-APP/",
+
+ /* ============ NEW: JSON DATA SOURCE SETTINGS (Feature 1 & 2) ============
+    Ravi: Set any of these to true to load that data from a static JSON file
+    in your GitHub repo instead of live Google Sheets API calls.
+    Good for data that rarely changes — faster, zero API quota used. */
+ USE_JSON_FOR_MASTER:false,
+ USE_JSON_FOR_INBOX:false,
+ USE_JSON_FOR_APPS:false,
+ /* Folder in your repo where JSON files are uploaded */
+ JSON_BASE_URL:"https://ravikumarmalhotra.github.io/KKSO-KBGA-APP/data/",
+ JSON_FILES:{ master:"master.json", inbox:"inbox.json", apps:"apps.json" },
+
+ VIEW_CONFIG_START_ROW:1,
+ VIEW_CONFIG_END_ROW:50,
+ ENTRY_CONFIG_START_ROW:82,
+ ENTRY_CONFIG_END_ROW:150,
+ USER_START_ROW:51,
+ USER_END_ROW:81,
+ /* ============ NEW: extended from AG to AI to fit "My Data" tracking columns (Feature 3) ============ */
+ CONFIG_END_COL:"AI",
+ DATA_FETCH_END_COL:"AB",
+ PERSONAL_DATA_LABELS:['Full Name','Designation','Department','Phone','Email','Address','Joining Date'],
+ CREDENTIAL_CHECK_INTERVAL:3600000
 };
 
 /* ===================== STATE ===================== */
@@ -35,24 +48,114 @@ let moreClickActions=[];
 let moreTree={};
 
 /* ===================== HELPERS ===================== */
-async function fetchSheet(sheetName,range){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}!${encodeURIComponent(range)}?key=${CONFIG.API_KEY}`;
-  const res=await fetch(url);
-  if(!res.ok)throw new Error(`API Error ${res.status}`);
-  const data=await res.json();
-  return data.values||[];
+/* ===================== MODIFIED: fetchSheet now supports JSON + external spreadsheets ===================== */
+async function fetchSheet(sheetName,range,spreadsheetId){
+ spreadsheetId=spreadsheetId||CONFIG.SHEET_ID; // NEW: optional 3rd param for Feature 3 (external sheets)
+
+ /* Feature 2: per-subject JSON override — if sheetName itself IS a .json filename */
+ if(isJsonFileRef(sheetName)){
+ const fileUrl=CONFIG.JSON_BASE_URL.replace(/\/$/,'')+'/'+String(sheetName).trim();
+ const full=await fetchJsonFile(fileUrl);
+ return sliceJsonRange(full,range);
+ }
+ /* Feature 1: master/inbox/apps forced to JSON via CONFIG toggle flags */
+ if(sheetName===CONFIG.SHEET_NAME&&CONFIG.USE_JSON_FOR_MASTER){
+ const full=await fetchJsonFile(CONFIG.JSON_BASE_URL.replace(/\/$/,'')+'/'+CONFIG.JSON_FILES.master);
+ return sliceJsonRange(full,range);
+ }
+ if(sheetName===CONFIG.INBOX_SHEET_NAME&&CONFIG.USE_JSON_FOR_INBOX){
+ const full=await fetchJsonFile(CONFIG.JSON_BASE_URL.replace(/\/$/,'')+'/'+CONFIG.JSON_FILES.inbox);
+ return sliceJsonRange(full,range);
+ }
+ if(sheetName===CONFIG.APPS_SHEET_NAME&&CONFIG.USE_JSON_FOR_APPS){
+ const full=await fetchJsonFile(CONFIG.JSON_BASE_URL.replace(/\/$/,'')+'/'+CONFIG.JSON_FILES.apps);
+ return sliceJsonRange(full,range);
+ }
+
+ /* Default: live Google Sheets via Cloudflare Worker (Service Account — no API key exposed) */
+ const url=`${CONFIG.WORKER_URL}?sheetId=${spreadsheetId}&range=${encodeURIComponent(sheetName+'!'+range)}`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error(`API Error ${res.status}`);
+ const data=await res.json();
+ return data.values||[];
 }
-async function fetchSheetFormulas(sheetName,range){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}!${encodeURIComponent(range)}?key=${CONFIG.API_KEY}&valueRenderOption=FORMULA`;
-  const res=await fetch(url);
-  if(!res.ok)throw new Error(`API Error ${res.status}`);
-  const data=await res.json();
-  return data.values||[];
+
+async function fetchSheetFormulas(sheetName,range,spreadsheetId){
+ spreadsheetId=spreadsheetId||CONFIG.SHEET_ID;
+ /* JSON sources never contain formulas — just return same values */
+ if(isJsonFileRef(sheetName)||
+ (sheetName===CONFIG.SHEET_NAME&&CONFIG.USE_JSON_FOR_MASTER)||
+ (sheetName===CONFIG.INBOX_SHEET_NAME&&CONFIG.USE_JSON_FOR_INBOX)||
+ (sheetName===CONFIG.APPS_SHEET_NAME&&CONFIG.USE_JSON_FOR_APPS)){
+ return fetchSheet(sheetName,range,spreadsheetId);
+ }
+ /* Default: live Google Sheets with FORMULA render option */
+ const url=`${CONFIG.WORKER_URL}?sheetId=${spreadsheetId}&range=${encodeURIComponent(sheetName+'!'+range)}&renderOption=FORMULA`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error(`API Error ${res.status}`);
+ const data=await res.json();
+ return data.values||[];
 }
 function isUrl(s){return typeof s==="string"&&/^https?:\/\//i.test(s)}
 function driveDirect(u){if(typeof u!=="string")return u;let m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/i);if(m)return`https://drive.google.com/uc?export=view&id=${m[1]}`;m=u.match(/drive\.google\.com\/open\?id=([^&]+)/i);if(m)return`https://drive.google.com/uc?export=view&id=${m[1]}`;return u}
 function extractImage(v){if(typeof v!=="string")return null;const m=v.match(/=*\s*IMAGE\s*\(\s*"([^"]+)"/i);if(m)return driveDirect(m[1]);if(isUrl(v)&&/\.(jpg|jpeg|png|gif|webp|bmp|svg)/i.test(v))return driveDirect(v);return null}
-function driveFileId(u){if(typeof u!=="string")return null;let m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/i);if(m)return m[1];m=u.match(/[?&]id=([^&]+)/i);if(m)return m[1];return null}
+/* ===================== JSON DATA SOURCE HELPERS (NEW — Feature 1 & 2) ===================== */
+
+/* Ravi: Detects if a config cell value is a JSON file reference (ends with .json)
+   Same idea as isHtmlFileRef() used elsewhere for embedded HTML forms.
+   Example: if your View Config "Data Sheet" cell contains "salesdata.json" 
+   instead of a real sheet tab name, it will auto-load from that JSON file. */
+function isJsonFileRef(v){
+ if(v===null||v===undefined)return false;
+ const s=String(v).trim();
+ if(!s)return false;
+ return /\.json(\?.*)?$/i.test(s);
+}
+
+/* Ravi: Converts column letter (A, B, ..., Z, AA, AB...) to zero-based index */
+function colLetterToIndex(col){
+ let result=0;
+ for(let i=0;i<col.length;i++){result=result*26+(col.toUpperCase().charCodeAt(i)-64)}
+ return result-1;
+}
+
+/* Ravi: Parses A1-notation ranges used in this app: "A1:AG50" or "K:AB" */
+function parseA1Range(range){
+ const parts=range.split(':');
+ const left=parts[0],right=parts[1]||parts[0];
+ const lm=left.match(/^([A-Z]+)(\d*)$/i),rm=right.match(/^([A-Z]+)(\d*)$/i);
+ return{
+ colStart:colLetterToIndex(lm[1]),
+ colEnd:colLetterToIndex(rm[1]),
+ rowStart:lm[2]?parseInt(lm[2],10)-1:0,
+ rowEnd:rm[2]?parseInt(rm[2],10)-1:null
+ };
+}
+
+/* Ravi: Slices a full JSON 2D array exactly like Google Sheets API would for a given range */
+function sliceJsonRange(fullData,range){
+ const{rowStart,rowEnd,colStart,colEnd}=parseA1Range(range);
+ const lastRow=rowEnd!==null?rowEnd:fullData.length-1;
+ const out=[];
+ for(let r=rowStart;r<=lastRow&&r<fullData.length;r++){
+ const src=fullData[r]||[];
+ const row=[];
+ for(let c=colStart;c<=colEnd;c++)row.push(src[c]!==undefined?src[c]:'');
+ out.push(row);
+ }
+ return out;
+}
+
+/* Ravi: Caches JSON files in memory so repeated calls don't re-download */
+let jsonCache={};
+async function fetchJsonFile(fileUrl){
+ if(jsonCache[fileUrl])return jsonCache[fileUrl];
+ const res=await fetch(fileUrl);
+ if(!res.ok)throw new Error(`JSON fetch error ${res.status} — check file exists at ${fileUrl}`);
+ const data=await res.json();
+ jsonCache[fileUrl]=data;
+ return data;
+}
 function getLevelCols(level){if(level==="admin")return{sheetCol:27,subCol:28};if(level==="supervisor")return{sheetCol:29,subCol:30};return{sheetCol:31,subCol:32}}
 
 function buildPersonalHTML(targetId){
@@ -1048,56 +1151,84 @@ function handleEntryClear(){
 /* ===================== MY DATA ===================== */
 let allMyEntries=[];
 
+/* ===================== MODIFIED: loadMyData (Feature 3 — cross-sheet support) ===================== */
 async function loadMyData(){
-  const lc=getLevelCols(currentLevel);
-  /* NO personal info in My Entry Data - only in Inbox */
+ const lc=getLevelCols(currentLevel);
+ allMyEntries=[];
+ const fetchCache={}; // NEW: avoid re-fetching same sheet+spreadsheet combo multiple times
 
-  allMyEntries=[];
-  const sheetNames=[...new Set(entryConfig.filter(r=>r&&String(r[lc.sheetCol]||'').trim()).map(r=>String(r[lc.sheetCol]).trim()))];
+ /* NEW: loop through EVERY entryConfig row (not just unique sheet names) —
+    this lets each subject define its OWN external spreadsheet + submitter column,
+    so entries from embedded HTML forms (possibly a totally different Google Sheet)
+    also show up here. */
+ for(const row of entryConfig){
+ if(!row)continue;
+ const subject=String(row[0]||'').trim();
+ const sheetName=String(row[lc.sheetCol]||'').trim();
+ if(!subject||!sheetName)continue;
 
-  for(const sn of sheetNames){
-    try{
-      const data=await fetchSheet(sn,'K:'+CONFIG.DATA_FETCH_END_COL);
-      for(let i=0;i<data.length;i++){
-        const row=data[i]||[];
-        const submitter=String(row[15]||'').trim();
-        if(submitter===currentUser){
-          allMyEntries.push({sheet:sn,subject:String(row[0]||'').trim(),subSubject:String(row[1]||'').trim(),data:row,rowIdx:i+1});
-        }
-      }
-    }catch(e){}
-  }
+ /* NEW: column AH (index 33) = external spreadsheet ID override */
+ const externalId=String(row[33]||'').trim()||CONFIG.SHEET_ID;
+ /* NEW: column AI (index 34) = submitter column letter override, default 'P' */
+ const submitterColLetter=String(row[34]||'').trim()||'P';
+ const submitterColIdx=colLetterToIndex(submitterColLetter);
+ const dateColIdx=submitterColIdx+1; /* Ravi: assumes Date/Time is the NEXT column after submitter */
 
-  allMyEntries.sort((a,b)=>{
-    const da=String((a.data||[])[16]||'');const db=String((b.data||[])[16]||'');
-    return db.localeCompare(da);
-  });
+ try{
+ const cacheKey=externalId+'|'+sheetName;
+ let data=fetchCache[cacheKey];
+ if(!data){
+ data=await fetchSheet(sheetName,'A:'+CONFIG.DATA_FETCH_END_COL,externalId);
+ fetchCache[cacheKey]=data;
+ }
+ for(let i=0;i<data.length;i++){
+ const r=data[i]||[];
+ if(String(r[0]||'').trim()!==subject)continue; /* Column A must match subject */
+ const submitter=String(r[submitterColIdx]||'').trim();
+ if(submitter===currentUser){
+ allMyEntries.push({
+ sheet:sheetName,
+ subject:subject,
+ subSubject:String(r[1]||'').trim(),
+ data:r,
+ rowIdx:i+1,
+ _dateColIdx:dateColIdx /* stash per-entry date column for correct sorting/stats below */
+ });
+ }
+ }
+ }catch(e){ /* skip this subject's sheet on error, continue with others */ }
+ }
 
-  const now=new Date();const todayStr=now.toLocaleDateString('en-GB');
-  const weekAgo=new Date(now);weekAgo.setDate(weekAgo.getDate()-7);
-  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
-  let today=0,week=0,month=0;
-  allMyEntries.forEach(e=>{
-    const ds=String((e.data||[])[16]||'');
-    if(ds.startsWith(todayStr))today++;
-    const parts=ds.split(/[/,\s]+/);
-    if(parts.length>=3){
-      const d=new Date(parts[2]+'-'+parts[1]+'-'+parts[0]);
-      if(!isNaN(d)){if(d>=weekAgo)week++;if(d>=monthStart)month++}
-    }
-  });
-  document.getElementById('statTotal').textContent=allMyEntries.length;
-  document.getElementById('statToday').textContent=today;
-  document.getElementById('statWeek').textContent=week;
-  document.getElementById('statMonth').textContent=month;
+ /* Sort by date — each entry may have its own date column position now */
+ allMyEntries.sort((a,b)=>{
+ const da=String((a.data||[])[a._dateColIdx]||'');
+ const db=String((b.data||[])[b._dateColIdx]||'');
+ return db.localeCompare(da);
+ });
 
-  const mySubjects=[...new Set(allMyEntries.map(e=>e.subject).filter(v=>v))];
-  const filterSel=document.getElementById('mySubjectFilter');
-  filterSel.innerHTML='<option value="">-- All Entries --</option>';
-  mySubjects.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;filterSel.appendChild(o)});
-  filterSel.onchange=()=>renderMyEntries(filterSel.value);
-
-  renderMyEntries('');
+ const now=new Date();const todayStr=now.toLocaleDateString('en-GB');
+ const weekAgo=new Date(now);weekAgo.setDate(weekAgo.getDate()-7);
+ const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+ let today=0,week=0,month=0;
+ allMyEntries.forEach(e=>{
+ const ds=String((e.data||[])[e._dateColIdx]||''); /* MODIFIED: use per-entry date column */
+ if(ds.startsWith(todayStr))today++;
+ const parts=ds.split(/[/,\s]+/);
+ if(parts.length>=3){
+ const d=new Date(parts[2]+'-'+parts[1]+'-'+parts[0]);
+ if(!isNaN(d)){if(d>=weekAgo)week++;if(d>=monthStart)month++}
+ }
+ });
+ document.getElementById('statTotal').textContent=allMyEntries.length;
+ document.getElementById('statToday').textContent=today;
+ document.getElementById('statWeek').textContent=week;
+ document.getElementById('statMonth').textContent=month;
+ const mySubjects=[...new Set(allMyEntries.map(e=>e.subject).filter(v=>v))];
+ const filterSel=document.getElementById('mySubjectFilter');
+ filterSel.innerHTML='<option value="">-- All Entries --</option>';
+ mySubjects.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;filterSel.appendChild(o)});
+ filterSel.onchange=()=>renderMyEntries(filterSel.value);
+ renderMyEntries('');
 }
 function renderMyEntries(filterSubject){
   const container=document.getElementById('myEntriesTable');
@@ -1148,7 +1279,7 @@ function renderMyEntries(filterSubject){
       for(let i=1;i<15;i++){const v=(entry.data||[])[i];if(v)dataCols.push(v)}
       html+=`<td>${dataCols.join(', ')}</td>`;
     }
-    html+=`<td>${String((entry.data||[])[16]||'')}</td>`;
+    html+=`<td>${String((entry.data||[])[entry._dateColIdx!=null?entry._dateColIdx:16]||'')}</td>`; /* MODIFIED: per-entry date column, falls back to 16 for safety */
     html+='</tr>';
   });
 
