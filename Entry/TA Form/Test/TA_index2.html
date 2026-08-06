@@ -23,6 +23,8 @@
   <div class="card">
     <form id="taForm" class="form-grid" autocomplete="off">
 
+      <div id="editingBanner" class="editing-banner full-width" style="display:none;"></div>
+
       <div class="field-group half" id="grp-name">
         <label for="fldName">Name Of Employee</label>
         <input type="text" id="fldName" readonly>
@@ -74,6 +76,7 @@
       </div>
 
       <button type="submit" id="submitBtn" class="full-width">🚀 Submit</button>
+      <button type="button" id="cancelEditBtn" class="full-width" style="display:none;">✖️ Cancel Edit</button>
 
       <div id="submitMessage" class="submit-message full-width"></div>
     </form>
@@ -108,18 +111,17 @@
           <tr>
             <th>SNo</th><th>Name</th><th>Designation</th><th>Date</th>
             <th>Object</th><th>Left</th><th>Arrived</th><th>From</th>
-            <th>To</th><th>%TA</th><th>Booked By</th>
+            <th>To</th><th>%TA</th><th>Booked By</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="viewTableBody"></tbody>
       </table>
     </div>
 
-    <!-- Hidden container used only during PDF generation -->
+    <!-- Hidden container reserved for future use -->
     <div id="pdf-template" style="display:none;"></div>
   </div>
 </main>
-
 
 <script src="TAMapping.js"></script>
 <script src="taPdf.js"></script>
