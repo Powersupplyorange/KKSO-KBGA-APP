@@ -5,9 +5,9 @@ const APP_VERSION="4.6.0";
 /* ===================== CONFIGURATION ===================== */
 /* Ravi you can change all settings here */
 let CONFIG={
-  SHEET_ID:"136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
-  API_KEY:"AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI",
-  SHEET_NAME:"master",
+ SHEET_ID:"136Fq_Pchc_kPJwEoBUgfRKzDqnYUs730w3vMhnSO9HI",
+ WORKER_URL:"https://keyps.powersupplyorange.workers.dev",
+ SHEET_NAME:"master",
   APPS_SCRIPT_URL:"https://script.google.com/macros/s/AKfycbzluFhsV2Ib6I-BK5OdFacx7hjK8nTZSRLlisBedPCr1-nGD5L6MDp85iJhv075odfa/exec",
   INBOX_SHEET_NAME:"inbox",
   APPS_SHEET_NAME:"apps",
@@ -36,18 +36,18 @@ let moreTree={};
 
 /* ===================== HELPERS ===================== */
 async function fetchSheet(sheetName,range){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}!${encodeURIComponent(range)}?key=${CONFIG.API_KEY}`;
-  const res=await fetch(url);
-  if(!res.ok)throw new Error(`API Error ${res.status}`);
-  const data=await res.json();
-  return data.values||[];
+ const url=`${CONFIG.WORKER_URL}?sheetId=${CONFIG.SHEET_ID}&range=${encodeURIComponent(sheetName+'!'+range)}`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error(`API Error ${res.status}`);
+ const data=await res.json();
+ return data.values||[];
 }
 async function fetchSheetFormulas(sheetName,range){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(sheetName)}!${encodeURIComponent(range)}?key=${CONFIG.API_KEY}&valueRenderOption=FORMULA`;
-  const res=await fetch(url);
-  if(!res.ok)throw new Error(`API Error ${res.status}`);
-  const data=await res.json();
-  return data.values||[];
+ const url=`${CONFIG.WORKER_URL}?sheetId=${CONFIG.SHEET_ID}&range=${encodeURIComponent(sheetName+'!'+range)}&renderOption=FORMULA`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error(`API Error ${res.status}`);
+ const data=await res.json();
+ return data.values||[];
 }
 function isUrl(s){return typeof s==="string"&&/^https?:\/\//i.test(s)}
 function driveDirect(u){if(typeof u!=="string")return u;let m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/i);if(m)return`https://drive.google.com/uc?export=view&id=${m[1]}`;m=u.match(/drive\.google\.com\/open\?id=([^&]+)/i);if(m)return`https://drive.google.com/uc?export=view&id=${m[1]}`;return u}
