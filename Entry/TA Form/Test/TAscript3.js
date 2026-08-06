@@ -1,4 +1,4 @@
-// ===================== script.js (combined) =====================
+// ===================== script.js =====================
 
 // ---------- Shared / URL params ----------
 function getUrlParam(name) {
@@ -9,8 +9,8 @@ function getUrlParam(name) {
 const loggedInUser  = getUrlParam('user');
 const loggedInLevel = getUrlParam('level');
 
-const displayName = loggedInUser.toUpperCase();           // "USER NAME"
-const lookupKey   = displayName.replace(/\s+/g, '_');      // "USER_NAME"
+const displayName = loggedInUser.toUpperCase();
+const lookupKey   = displayName.replace(/\s+/g, '_');
 const employeeData = (typeof TAMapping !== 'undefined' && TAMapping[lookupKey]) || {};
 
 const WORKER_URL = 'https://keyps.powersupplyorange.workers.dev';
@@ -22,6 +22,27 @@ function formatDateDMY(d) { return pad(d.getDate())+'-'+pad(d.getMonth()+1)+'-'+
 function formatDateYMD(d) { return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 
 // ===================================================================
+// CUSTOM ALERT (replaces native alert() — hides site URL)
+// ===================================================================
+function showAppAlert(message, type = 'info') {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay';
+    const icon = type === 'error' ? '⚠️' : (type === 'success' ? '✅' : 'ℹ️');
+    overlay.innerHTML = `
+      <div class="custom-alert-box ${type}">
+        <div class="custom-alert-icon">${icon}</div>
+        <div class="custom-alert-message">${message}</div>
+        <button class="custom-alert-btn">OK</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    const closeModal = () => { overlay.remove(); resolve(); };
+    overlay.querySelector('.custom-alert-btn').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  });
+}
+
+// ===================================================================
 // TAB SWITCHING
 // ===================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -31,22 +52,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewPage  = document.getElementById('viewPage');
 
   btnEntry.addEventListener('click', () => {
-    btnEntry.classList.add('active');
-    btnView.classList.remove('active');
-    entryPage.classList.add('active');
-    viewPage.classList.remove('active');
+    btnEntry.classList.add('active'); btnView.classList.remove('active');
+    entryPage.classList.add('active'); viewPage.classList.remove('active');
   });
 
   btnView.addEventListener('click', () => {
-    btnView.classList.add('active');
-    btnEntry.classList.remove('active');
-    viewPage.classList.add('active');
-    entryPage.classList.remove('active');
-    initView();          // fetch data every time View tab opened
+    btnView.classList.add('active'); btnEntry.classList.remove('active');
+    viewPage.classList.add('active'); entryPage.classList.remove('active');
+    initView();
   });
 
-  initEntryForm();       // prepare entry form on load
-  populateMonthSelect(); // pre-fill month dropdown so it's ready
+  initEntryForm();
+  populateMonthSelect();
+
+  document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    exitEditMode();
+    showSubmitMessage('Edit cancelled.', 'info');
+  });
 });
 
 // ===================================================================
@@ -63,25 +85,42 @@ const fldTo          = document.getElementById('fldTo');
 const fldTA          = document.getElementById('fldTA');
 const fldBookedBy    = document.getElementById('fldBookedBy');
 const taForm         = document.getElementById('taForm');
+const submitMessageEl = document.getElementById('submitMessage');
+let submitMessageTimer = null;
+
+// ---- EDIT MODE STATE ----
+let editingSerialNo = null; // null = Add mode; non-null = Editing that SerialNo
+
+function showSubmitMessage(text, type) {
+  clearTimeout(submitMessageTimer);
+  submitMessageEl.textContent = text;
+  submitMessageEl.className = 'submit-message full-width show ' + type;
+  submitMessageTimer = setTimeout(() => {
+    submitMessageEl.className = 'submit-message full-width';
+    submitMessageEl.textContent = '';
+  }, 5000);
+}
+
+function updateSubmitButtonLabel() {
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.textContent = editingSerialNo ? '💾 Update' : '🚀 Submit';
+}
 
 function initEntryForm() {
   fldName.value = displayName;
   fldDesignation.value = employeeData.Designation || '';
 
   const today = new Date();
-  const minD = new Date(today); if (today.getDate() > 1) {
-  minD.setDate(today.getDate() - 1);
-  }
-  const maxD = new Date(today); maxD.setDate(today.getDate() + 0);
+  const minD = new Date(today); minD.setDate(today.getDate() - 2);
+  const maxD = new Date(today); maxD.setDate(today.getDate() + 1);
   fldDate.min = formatDateYMD(minD);
   fldDate.max = formatDateYMD(maxD);
   fldDate.value = formatDateYMD(today);
 
-  fldFrom.value = 'KKSO (KAVI SUBHAS)';
+  fldFrom.value = 'KKSO';
 
   fldTo.innerHTML = '<option value="">-- Select Station --</option>';
   (typeof TAStations !== 'undefined' ? TAStations : []).forEach(st => {
-    if (st === 'KKSO (KAVI SUBHASH)') return;
     const opt = document.createElement('option');
     opt.value = st; opt.textContent = st;
     fldTo.appendChild(opt);
@@ -96,6 +135,7 @@ function initEntryForm() {
 
   refreshAllFieldStatus();
   attachEntryListeners();
+  updateSubmitButtonLabel();
 }
 
 function attachEntryListeners() {
@@ -108,9 +148,10 @@ function attachEntryListeners() {
 }
 
 function validateDate() {
+  if (editingSerialNo) return; // date is locked during edit, skip validation
   const val = fldDate.value;
   if (val < fldDate.min || val > fldDate.max) {
-    alert('Date must be between ' + fldDate.min + ' and ' + fldDate.max);
+    showAppAlert('Date must be between ' + fldDate.min + ' and ' + fldDate.max, 'error');
     fldDate.value = '';
   }
 }
@@ -162,21 +203,6 @@ function allFieldsFilled() {
           fldFrom, fldTo, fldTA, fldBookedBy].every(isFilled);
 }
 
-// ---------- Submit message helper (replaces alert) ----------
-const submitMessageEl = document.getElementById('submitMessage');
-let submitMessageTimer = null;
-
-function showSubmitMessage(text, type) {
-  clearTimeout(submitMessageTimer);
-  submitMessageEl.textContent = text;
-  submitMessageEl.className = 'submit-message full-width show ' + type; // type: 'success' | 'error'
-
-  submitMessageTimer = setTimeout(() => {
-    submitMessageEl.className = 'submit-message full-width';
-    submitMessageEl.textContent = '';
-  }, 5000);
-}
-
 async function handleSubmit(e) {
   e.preventDefault();
   refreshAllFieldStatus();
@@ -186,8 +212,10 @@ async function handleSubmit(e) {
     return;
   }
 
+  const isEditing = !!editingSerialNo;
   const submitBtn = document.getElementById('submitBtn');
-  submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+  submitBtn.textContent = isEditing ? 'Updating...' : 'Submitting...';
 
   const now = new Date();
   const timeStamp = formatDateDMY(now) + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -197,7 +225,7 @@ async function handleSubmit(e) {
   const payload = {
     target: targetMonth,
     data: {
-      SerialNo: '',
+      SerialNo: isEditing ? editingSerialNo : '',
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
       Date: dateFormatted,
@@ -206,7 +234,7 @@ async function handleSubmit(e) {
       ArrivedTime: fldArrived.value,
       From: fldFrom.value,
       To: fldTo.value,
-      TA: fldTA.value,
+      "%TA": fldTA.value,
       BookedBy: fldBookedBy.value,
       SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
     }
@@ -220,17 +248,26 @@ async function handleSubmit(e) {
     });
     if (!response.ok) throw new Error('Network error: ' + response.status);
 
-    showSubmitMessage('✅ TA submitted successfully!', 'success');
-    resetEntryForm();
+    if (isEditing) {
+      showSubmitMessage('✅ TA entry updated successfully!', 'success');
+      exitEditMode();
+      setTimeout(() => {
+        const viewBtn = document.getElementById('btnView');
+        if (viewBtn) viewBtn.click(); // returns to View tab and auto-refreshes
+      }, 1000);
+    } else {
+      showSubmitMessage('✅ TA submitted successfully!', 'success');
+      resetEntryForm();
+    }
   } catch (err) {
     console.error('Submit failed:', err);
-    showSubmitMessage('❌ Submission failed. Please try again.', 'error');
+    showSubmitMessage(isEditing ? '❌ Update failed. Please try again.' : '❌ Submission failed. Please try again.', 'error');
   } finally {
-    submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit';
+    submitBtn.disabled = false;
+    updateSubmitButtonLabel();
   }
 }
 
-    
 function resetEntryForm() {
   fldObject.value = ''; fldLeft.value = ''; fldArrived.value = '';
   fldTo.value = ''; fldTA.value = ''; fldBookedBy.value = '';
@@ -238,8 +275,56 @@ function resetEntryForm() {
   refreshAllFieldStatus();
 }
 
+// ---- EDIT MODE FUNCTIONS ----
+function editRow(index) {
+  const row = currentFilteredData[index];
+  if (!row) return;
+
+  editingSerialNo = row.SerialNo;
+
+  // Switch to Entry tab
+  document.getElementById('btnEntry').click();
+
+  fldName.value = displayName;
+  fldDesignation.value = employeeData.Designation || row.Designation || '';
+
+  // Lock the Date field (cannot be changed while editing)
+  const parsedDate = (typeof taParseDMY === 'function') ? taParseDMY(row.Date) : null;
+  if (parsedDate) fldDate.value = formatDateYMD(parsedDate);
+  fldDate.disabled = true;
+
+  // Editable fields
+  fldObject.value = row.ObjectOfJourney || '';
+  fldLeft.value = row.LeftTime || '';
+  fldArrived.value = row.ArrivedTime || '';
+  fldFrom.value = 'KKSO';
+  fldTo.value = row.To || '';
+  fldBookedBy.value = row.BookedBy || '';
+
+  computeTA();
+  refreshAllFieldStatus();
+
+  const banner = document.getElementById('editingBanner');
+  banner.textContent = '✏️ Editing entry dated ' + row.Date + ' — Date cannot be changed.';
+  banner.style.display = 'block';
+
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  updateSubmitButtonLabel();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exitEditMode() {
+  editingSerialNo = null;
+  fldDate.disabled = false;
+  document.getElementById('editingBanner').style.display = 'none';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  resetEntryForm();
+  updateSubmitButtonLabel();
+}
+
 // ===================================================================
-// VIEW PAGE LOGIC  (FIXED: reads columns by fixed position, not header text)
+// VIEW PAGE LOGIC
 // ===================================================================
 let currentFilteredData = [];
 
@@ -252,23 +337,11 @@ const viewStatus    = document.getElementById('viewStatus');
 const viewTableBody = document.getElementById('viewTableBody');
 let viewListenersAttached = false;
 
-// ---- Fixed column order (matches the Entry-page POST payload) ----
-// A            B                C             D      E                F         G            H     I    J     K
-// SerialNo  NameOfEmployee   Designation   Date   ObjectOfJourney  LeftTime  ArrivedTime  From   To  %TA  BookedBy
 const COL = {
-  SerialNo: 0,
-  NameOfEmployee: 1,
-  Designation: 2,
-  Date: 3,
-  ObjectOfJourney: 4,
-  LeftTime: 5,
-  ArrivedTime: 6,
-  From: 7,
-  To: 8,
-  TA: 9,
-  BookedBy: 10
+  SerialNo: 0, NameOfEmployee: 1, Designation: 2, Date: 3, ObjectOfJourney: 4,
+  LeftTime: 5, ArrivedTime: 6, From: 7, To: 8, TA: 9, BookedBy: 10
 };
-const TOTAL_COLS = 11; // A..K
+const TOTAL_COLS = 11;
 
 function populateMonthSelect() {
   const months = (typeof TAMonths !== 'undefined') ? TAMonths : [];
@@ -288,11 +361,8 @@ function setStatus(msg, isError) {
 }
 
 async function fetchSheetData(sheetName) {
-  const range = `${sheetName}!A:K`; // explicit A to K
+  const range = `${sheetName}!A:K`;
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
-
-  console.log('Fetching URL:', url);
-
   const res = await fetch(url);
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
@@ -303,34 +373,24 @@ async function fetchSheetData(sheetName) {
   return json.values || [];
 }
 
-// Pad every row to TOTAL_COLS length so trailing-empty-cell truncation
-// (Google Sheets API drops empty cells at end of row) never shifts data.
 function padRow(row) {
   const padded = row.slice(0, TOTAL_COLS);
   while (padded.length < TOTAL_COLS) padded.push('');
   return padded;
 }
 
-// Convert raw rows into objects using FIXED POSITIONS (ignores header text completely)
 function rowsToObjects(rows) {
-  if (!rows || rows.length <= 1) return []; // need header + at least 1 data row
-  const dataRows = rows.slice(1); // skip header row (row 0)
-
+  if (!rows || rows.length <= 1) return [];
+  const dataRows = rows.slice(1);
   return dataRows
     .map(padRow)
-    .filter(r => r[COL.SerialNo] !== '' || r[COL.NameOfEmployee] !== '') // skip fully blank rows
+    .filter(r => r[COL.SerialNo] !== '' || r[COL.NameOfEmployee] !== '')
     .map(r => ({
-      SerialNo: r[COL.SerialNo],
-      NameOfEmployee: r[COL.NameOfEmployee],
-      Designation: r[COL.Designation],
-      Date: r[COL.Date],
-      ObjectOfJourney: r[COL.ObjectOfJourney],
-      LeftTime: r[COL.LeftTime],
-      ArrivedTime: r[COL.ArrivedTime],
-      From: r[COL.From],
-      To: r[COL.To],
-      TA: r[COL.TA],
-      BookedBy: r[COL.BookedBy]
+      SerialNo: r[COL.SerialNo], NameOfEmployee: r[COL.NameOfEmployee],
+      Designation: r[COL.Designation], Date: r[COL.Date],
+      ObjectOfJourney: r[COL.ObjectOfJourney], LeftTime: r[COL.LeftTime],
+      ArrivedTime: r[COL.ArrivedTime], From: r[COL.From], To: r[COL.To],
+      TA: r[COL.TA], BookedBy: r[COL.BookedBy]
     }));
 }
 
@@ -345,15 +405,11 @@ async function loadViewData() {
 
   try {
     const rows = await fetchSheetData(sheetName);
-
     if (!rows || rows.length === 0) {
       setStatus('No data found in sheet "' + sheetName + '".', true);
       return;
     }
-
     const objects = rowsToObjects(rows);
-
-    // ---- Filter strictly by logged-in USER NAME ----
     const targetName = displayName.trim().toUpperCase();
     const filtered = objects.filter(o =>
       (o.NameOfEmployee || '').toString().trim().toUpperCase() === targetName
@@ -362,7 +418,6 @@ async function loadViewData() {
     currentFilteredData = filtered;
     renderTable(filtered);
     renderSummary(filtered);
-
     setStatus(filtered.length ? '' : 'No records found for ' + displayName + ' in ' + sheetName + '.');
   } catch (err) {
     console.error('loadViewData error:', err);
@@ -372,20 +427,14 @@ async function loadViewData() {
 
 function renderTable(data) {
   viewTableBody.innerHTML = '';
-  data.forEach(row => {
+  data.forEach((row, index) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${row.SerialNo}</td>
-      <td>${row.NameOfEmployee}</td>
-      <td>${row.Designation}</td>
-      <td>${row.Date}</td>
-      <td>${row.ObjectOfJourney}</td>
-      <td>${row.LeftTime}</td>
-      <td>${row.ArrivedTime}</td>
-      <td>${row.From}</td>
-      <td>${row.To}</td>
-      <td>${row.TA}</td>
-      <td>${row.BookedBy}</td>`;
+      <td>${row.SerialNo}</td><td>${row.NameOfEmployee}</td><td>${row.Designation}</td>
+      <td>${row.Date}</td><td>${row.ObjectOfJourney}</td><td>${row.LeftTime}</td>
+      <td>${row.ArrivedTime}</td><td>${row.From}</td><td>${row.To}</td>
+      <td>${row.TA}</td><td>${row.BookedBy}</td>
+      <td><button class="edit-btn" onclick="editRow(${index})">✏️ Edit</button></td>`;
     viewTableBody.appendChild(tr);
   });
 }
@@ -393,19 +442,17 @@ function renderTable(data) {
 function renderSummary(data) {
   const totalTA = data.length;
   const rate = (employeeData && employeeData.Rates) ? parseFloat(employeeData.Rates) : 0;
-
   let totalAmount = 0;
   data.forEach(row => {
     const pct = parseFloat((row.TA || '0').toString().replace('%', '')) || 0;
     totalAmount += (pct / 100) * rate;
   });
-
   totalTAEl.textContent = totalTA;
   totalAmountEl.textContent = totalAmount.toFixed(2);
 }
 
 function generatePDF() {
-  downloadTAPdfDirect();   // ✅ now downloads a real PDF file directly — no print dialog needed
+  downloadTAPdfDirect(); // defined in taPdf.js
 }
 
 function initView() {
@@ -416,4 +463,4 @@ function initView() {
     viewListenersAttached = true;
   }
   loadViewData();
-}
+    }
