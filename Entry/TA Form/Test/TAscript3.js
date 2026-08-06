@@ -213,6 +213,8 @@ async function handleSubmit(e) {
   }
 
   const isEditing = !!editingSerialNo;
+  const currentMode = isEditing ? 'update' : 'submit';
+
   const submitBtn = document.getElementById('submitBtn');
   submitBtn.disabled = true;
   submitBtn.textContent = isEditing ? 'Updating...' : 'Submitting...';
@@ -236,7 +238,8 @@ async function handleSubmit(e) {
       To: fldTo.value,
       "%TA": fldTA.value,
       BookedBy: fldBookedBy.value,
-      SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
+      SubmitBy: currentMode === 'submit' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : '',
+      EditBy: currentMode === 'update' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : ''
     }
   };
 
@@ -268,6 +271,9 @@ async function handleSubmit(e) {
   }
 }
 
+
+  
+
 function resetEntryForm() {
   fldObject.value = ''; fldLeft.value = ''; fldArrived.value = '';
   fldTo.value = ''; fldTA.value = ''; fldBookedBy.value = '';
@@ -279,6 +285,12 @@ function resetEntryForm() {
 function editRow(index) {
   const row = currentFilteredData[index];
   if (!row) return;
+
+  const currentMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+  if (monthSelect.value !== currentMonth) {
+    showAppAlert('Only current month (' + currentMonth + ') entries can be edited.', 'error');
+    return;
+  }
 
   editingSerialNo = row.SerialNo;
 
@@ -427,14 +439,21 @@ async function loadViewData() {
 
 function renderTable(data) {
   viewTableBody.innerHTML = '';
+  const currentMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+  const isCurrentMonthSelected = (monthSelect.value === currentMonth);
+
   data.forEach((row, index) => {
     const tr = document.createElement('tr');
+    const editCell = isCurrentMonthSelected
+      ? `<button class="edit-btn" onclick="editRow(${index})">✏️ Edit</button>`
+      : `<span class="edit-disabled" title="Only current month entries can be edited">🔒 Locked</span>`;
+
     tr.innerHTML = `
       <td>${row.SerialNo}</td><td>${row.NameOfEmployee}</td><td>${row.Designation}</td>
       <td>${row.Date}</td><td>${row.ObjectOfJourney}</td><td>${row.LeftTime}</td>
       <td>${row.ArrivedTime}</td><td>${row.From}</td><td>${row.To}</td>
       <td>${row.TA}</td><td>${row.BookedBy}</td>
-      <td><button class="edit-btn" onclick="editRow(${index})">✏️ Edit</button></td>`;
+      <td>${editCell}</td>`;
     viewTableBody.appendChild(tr);
   });
 }
