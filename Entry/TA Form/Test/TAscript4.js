@@ -89,7 +89,39 @@ const submitMessageEl = document.getElementById('submitMessage');
 let submitMessageTimer = null;
 
 // ---- EDIT MODE STATE ----
-let editingSerialNo = null; // null = Add mode; non-null = Editing that SerialNo
+let editingSerialNo = null;
+let editingSubmitBy = null; // Add a variable to hold original SubmitBy
+
+function editRow(index) {
+  const row = currentFilteredData[index];
+  if (!row) return;
+
+  const currentMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+  if (monthSelect.value !== currentMonth) {
+    showAppAlert('Only current month (' + currentMonth + ') entries can be edited.', 'error');
+    return;
+  }
+
+  // Store existing metadata
+  editingSerialNo = row.SerialNo;
+  editingSubmitBy = row.SubmitBy || ''; // Save original SubmitBy value
+
+  // Switch to Entry tab
+  document.getElementById('btnEntry').click();
+  
+  // ... rest of your editRow function logic ...
+}
+
+function exitEditMode() {
+  editingSerialNo = null;
+  editingSubmitBy = null; // Reset original SubmitBy
+  fldDate.disabled = false;
+  document.getElementById('editingBanner').style.display = 'none';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  resetEntryForm();
+  updateSubmitButtonLabel();
+}
+//-----------------------------------------------------------------------------
 
 function showSubmitMessage(text, type) {
   clearTimeout(submitMessageTimer);
@@ -225,23 +257,26 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
-    target: targetMonth,
-    data: {
-      SerialNo: isEditing ? editingSerialNo : '',
-      NameOfEmployee: fldName.value,
-      Designation: fldDesignation.value,
-      Date: dateFormatted,
-      ObjectOfJourney: fldObject.value,
-      LeftTime: fldLeft.value,
-      ArrivedTime: fldArrived.value,
-      From: fldFrom.value,
-      To: fldTo.value,
-      TA: fldTA.value,
-      BookedBy: fldBookedBy.value,
-      SubmitBy: currentMode === 'submit' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : '',
-      EditBy: currentMode === 'update' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : ''
-    }
-  };
+  target: targetMonth,
+  data: {
+    // Preserve SerialNo when editing
+    SerialNo: isEditing ? editingSerialNo : '',
+    NameOfEmployee: fldName.value,
+    Designation: fldDesignation.value,
+    Date: dateFormatted,
+    ObjectOfJourney: fldObject.value,
+    LeftTime: fldLeft.value,
+    ArrivedTime: fldArrived.value,
+    From: fldFrom.value,
+    To: fldTo.value,
+    TA: fldTA.value,
+    BookedBy: fldBookedBy.value,
+    // Keep original SubmitBy when editing, otherwise generate new SubmitBy on first submit
+    SubmitBy: isEditing ? editingSubmitBy : ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp),
+    // Populate EditBy only when updating
+    EditBy: isEditing ? ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp) : ''
+  }
+};
 
   try {
     const response = await fetch(WORKER_URL, {
