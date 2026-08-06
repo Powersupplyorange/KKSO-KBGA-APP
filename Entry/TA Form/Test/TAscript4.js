@@ -238,7 +238,6 @@ function allFieldsFilled() {
 async function handleSubmit(e) {
   e.preventDefault();
   refreshAllFieldStatus();
-
   if (!allFieldsFilled()) {
     showSubmitMessage('⚠️ Please fill all fields before submitting.', 'error');
     return;
@@ -246,7 +245,6 @@ async function handleSubmit(e) {
 
   const isEditing = !!editingSerialNo;
   const currentMode = isEditing ? 'update' : 'submit';
-
   const submitBtn = document.getElementById('submitBtn');
   submitBtn.disabled = true;
   submitBtn.textContent = isEditing ? 'Updating...' : 'Submitting...';
@@ -256,34 +254,57 @@ async function handleSubmit(e) {
   const dateFormatted = formatDateDMY(new Date(fldDate.value));
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
-  const payload = {
-  target: targetMonth,
-  data: {
-    // Preserve SerialNo when editing
-    SerialNo: isEditing ? editingSerialNo : '',
-    NameOfEmployee: fldName.value,
-    Designation: fldDesignation.value,
-    Date: dateFormatted,
-    ObjectOfJourney: fldObject.value,
-    LeftTime: fldLeft.value,
-    ArrivedTime: fldArrived.value,
-    From: fldFrom.value,
-    To: fldTo.value,
-    TA: fldTA.value,
-    BookedBy: fldBookedBy.value,
-    // Keep original SubmitBy when editing, otherwise generate new SubmitBy on first submit
-    SubmitBy: isEditing ? editingSubmitBy : ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp),
-    // Populate EditBy only when updating
-    EditBy: isEditing ? ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp) : ''
-  }
-};
-
   try {
+    let finalSerialNo = '';
+
+    if (isEditing) {
+      // 1. EDIT MODE: Preserve original SerialNo
+      finalSerialNo = editingSerialNo;
+    } else {
+      // 2. NEW SUBMIT MODE: Fetch existing sheet data & generate Last SerialNo + 1
+      submitBtn.textContent = 'Calculating SL No...';
+      const existingRows = await fetchSheetData(targetMonth).catch(() => []);
+      
+      let maxSerial = 0;
+      if (existingRows && existingRows.length > 1) {
+        // Loop starting from row index 1 (skipping headers)
+        for (let i = 1; i < existingRows.length; i++) {
+          const val = parseInt(existingRows[i][0], 10); // Col A / SerialNo
+          if (!isNaN(val) && val > maxSerial) {
+            maxSerial = val;
+          }
+        }
+      }
+      finalSerialNo = maxSerial + 1; // Generates next auto serial number (e.g. 10 -> 11)
+      submitBtn.textContent = 'Submitting...';
+    }
+
+    const payload = {
+      target: targetMonth,
+      data: {
+        SerialNo: finalSerialNo,
+        NameOfEmployee: fldName.value,
+        Designation: fldDesignation.value,
+        Date: dateFormatted,
+        ObjectOfJourney: fldObject.value,
+        LeftTime: fldLeft.value,
+        ArrivedTime: fldArrived.value,
+        From: fldFrom.value,
+        To: fldTo.value,
+        TA: fldTA.value,
+        BookedBy: fldBookedBy.value,
+        // Edit ke waqt purana SubmitBy rakhein, Naye submit par new timestamp string
+        SubmitBy: isEditing ? editingSubmitBy : ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp),
+        EditBy: isEditing ? ('[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp) : ''
+      }
+    };
+
     const response = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
     if (!response.ok) throw new Error('Network error: ' + response.status);
 
     if (isEditing) {
@@ -291,10 +312,10 @@ async function handleSubmit(e) {
       exitEditMode();
       setTimeout(() => {
         const viewBtn = document.getElementById('btnView');
-        if (viewBtn) viewBtn.click(); // returns to View tab and auto-refreshes
+        if (viewBtn) viewBtn.click(); // returns to View tab and refreshes
       }, 1000);
     } else {
-      showSubmitMessage('✅ TA submitted successfully!', 'success');
+      showSubmitMessage('✅ TA submitted successfully! (SL No: ' + finalSerialNo + ')', 'success');
       resetEntryForm();
     }
   } catch (err) {
