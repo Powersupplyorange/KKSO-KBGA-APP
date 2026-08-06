@@ -227,7 +227,7 @@ async function handleSubmit(e) {
   const payload = {
     target: targetMonth,
     data: {
-      SerialNo: isEditing ? editingSerialNo : '',
+      SerialNo: '',
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
       Date: dateFormatted,
