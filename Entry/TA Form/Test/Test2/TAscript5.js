@@ -236,7 +236,7 @@ async function handleSubmit(e) {
       ArrivedTime: fldArrived.value,
       From: fldFrom.value,
       To: fldTo.value,
-      "%TA": fldTA.value,
+      TA: fldTA.value,
       BookedBy: fldBookedBy.value,
       SubmitBy: currentMode === 'submit' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : '',
       EditBy: currentMode === 'update' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : ''
