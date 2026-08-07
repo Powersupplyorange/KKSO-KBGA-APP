@@ -186,8 +186,12 @@ async function handleSubmit(e) {
     return;
   }
 
+  const isEditing = !!editingSerialNo;
+  const currentMode = isEditing ? 'update' : 'submit';
+
   const submitBtn = document.getElementById('submitBtn');
-  submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+  submitBtn.textContent = isEditing ? 'Updating...' : 'Submitting...';
 
   const now = new Date();
   const timeStamp = formatDateDMY(now) + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -197,7 +201,7 @@ async function handleSubmit(e) {
   const payload = {
     target: targetMonth,
     data: {
-      SerialNo: '',
+      SerialNo: isEditing ? editingSerialNo : '',
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
       Date: dateFormatted,
@@ -206,9 +210,10 @@ async function handleSubmit(e) {
       ArrivedTime: fldArrived.value,
       From: fldFrom.value,
       To: fldTo.value,
-      TA: fldTA.value,
+      "%TA": fldTA.value,
       BookedBy: fldBookedBy.value,
-      SubmitBy: loggedInUser + ', ' + loggedInLevel + ', ' + timeStamp
+      SubmitBy: currentMode === 'submit' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : '',
+      EditBy: currentMode === 'update' ? '[ ' + currentMode + ' ] ' + loggedInUser + '; ' + loggedInLevel + '; ' + timeStamp : ''
     }
   };
 
@@ -220,13 +225,23 @@ async function handleSubmit(e) {
     });
     if (!response.ok) throw new Error('Network error: ' + response.status);
 
-    showSubmitMessage('✅ TA submitted successfully!', 'success');
-    resetEntryForm();
+    if (isEditing) {
+      showSubmitMessage('✅ TA entry updated successfully!', 'success');
+      exitEditMode();
+      setTimeout(() => {
+        const viewBtn = document.getElementById('btnView');
+        if (viewBtn) viewBtn.click(); // returns to View tab and auto-refreshes
+      }, 1000);
+    } else {
+      showSubmitMessage('✅ TA submitted successfully!', 'success');
+      resetEntryForm();
+    }
   } catch (err) {
     console.error('Submit failed:', err);
-    showSubmitMessage('❌ Submission failed. Please try again.', 'error');
+    showSubmitMessage(isEditing ? '❌ Update failed. Please try again.' : '❌ Submission failed. Please try again.', 'error');
   } finally {
-    submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit';
+    submitBtn.disabled = false;
+    updateSubmitButtonLabel();
   }
 }
 
@@ -372,20 +387,21 @@ async function loadViewData() {
 
 function renderTable(data) {
   viewTableBody.innerHTML = '';
-  data.forEach(row => {
+  const currentMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
+  const isCurrentMonthSelected = (monthSelect.value === currentMonth);
+
+  data.forEach((row, index) => {
     const tr = document.createElement('tr');
+    const editCell = isCurrentMonthSelected
+      ? `<button class="edit-btn" onclick="editRow(${index})">✏️ Edit</button>`
+      : `<span class="edit-disabled" title="Only current month entries can be edited">🔒 Locked</span>`;
+
     tr.innerHTML = `
-      <td>${row.SerialNo}</td>
-      <td>${row.NameOfEmployee}</td>
-      <td>${row.Designation}</td>
-      <td>${row.Date}</td>
-      <td>${row.ObjectOfJourney}</td>
-      <td>${row.LeftTime}</td>
-      <td>${row.ArrivedTime}</td>
-      <td>${row.From}</td>
-      <td>${row.To}</td>
-      <td>${row.TA}</td>
-      <td>${row.BookedBy}</td>`;
+      <td>${row.SerialNo}</td><td>${row.NameOfEmployee}</td><td>${row.Designation}</td>
+      <td>${row.Date}</td><td>${row.ObjectOfJourney}</td><td>${row.LeftTime}</td>
+      <td>${row.ArrivedTime}</td><td>${row.From}</td><td>${row.To}</td>
+      <td>${row.TA}</td><td>${row.BookedBy}</td>
+      <td>${editCell}</td>`;
     viewTableBody.appendChild(tr);
   });
 }
