@@ -220,3 +220,37 @@ tbody tr:hover{ background:#e8f7f2; }
   .field-group label{ font-size:12px; }
   .app-title{ font-size:14px; }
 }
+/* ===================== EDIT MODE STYLES ===================== */
+.edit-btn{
+  padding:6px 14px; border:none; border-radius:8px; font-weight:700; font-size:12px;
+  color:#fff; background:linear-gradient(135deg,#f093fb,#764ba2); cursor:pointer;
+  box-shadow:0 4px 10px rgba(118,75,162,0.4); transition:transform 0.2s ease;
+}
+.edit-btn:hover{ transform:translateY(-2px); }
+
+.editing-banner{
+  background:#fff3cd; border:2px solid #ffca2c; color:#7a5b00;
+  padding:10px 14px; border-radius:10px; font-weight:700; text-align:center; font-size:13px;
+}
+
+#cancelEditBtn{
+  padding:14px; border:none; border-radius:14px; font-weight:800; font-size:15px;
+  color:#fff; cursor:pointer; margin-top:8px;
+  background:linear-gradient(135deg,#ef476f,#b3123f);
+  box-shadow:0 6px 16px rgba(239,71,111,0.35);
+  transition:transform 0.2s ease;
+}
+#cancelEditBtn:hover{ transform:translateY(-2px); }
+
+.field-group input:disabled{
+  background:#e5e5e5 !important; border-color:#bbb !important;
+  color:#666; cursor:not-allowed;
+}
+
+.submit-message.info{
+  background:#e0e7ff; color:#3730a3; border:1px solid #a5b4fc;
+}
+.edit-disabled{
+  font-size:11px; font-weight:700; color:#888;
+  padding:6px 10px; display:inline-block;
+}
