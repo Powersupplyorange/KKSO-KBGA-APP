@@ -225,7 +225,6 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
-    sheetId: SHEET_ID, // Sheets ID paas kar rahe hain
     target: targetMonth,
     data: {
       SeriaLNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
