@@ -227,7 +227,7 @@ async function handleSubmit(e) {
   const payload = {
     target: targetMonth,
     data: {
-      SeriaLNo: isEditing ? editingSerialNo : '',
+      SeriaLNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
       Date: dateFormatted,
