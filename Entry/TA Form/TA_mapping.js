@@ -76,7 +76,7 @@ const BookSupervisor = [
 // Used to compute "Time Arrived" (going) & "Time Left" (return) in the PDF.
 // ⚠️ MUST have an entry for EVERY station in TAStations, or it defaults to 0.
 const stationTime = { 
-"KBST (BARUN SENGUPTA)": 20,
+"KBST (BARUN SENGUPTA)": 19,
 "KBGA (BELEGHATA)": 23,
 "KGKG (GAUR KISHOR GHOSH)": 30,
 "KNLN (NALBAN)": 35,
