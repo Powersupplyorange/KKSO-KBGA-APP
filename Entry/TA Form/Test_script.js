@@ -228,7 +228,7 @@ async function handleSubmit(e) {
     sheetId: SHEET_ID, // Sheets ID paas kar rahe hain
     target: targetMonth,
     data: {
-      SerialNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
+      SeriaLNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
       NameOfEmployee: fldName.value,
       Designation: fldDesignation.value,
       Date: dateFormatted,
