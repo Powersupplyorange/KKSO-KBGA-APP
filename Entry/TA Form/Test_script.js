@@ -230,6 +230,7 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
+    //action: isEditing ? 'update' : 'submit', // Worker ko action pata chalega agar same date and same person ko dubara entry chahiye to cooment ko hata do dono jagah worker me bhi.
     target: targetMonth,
     data: {
       SeriaLNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
