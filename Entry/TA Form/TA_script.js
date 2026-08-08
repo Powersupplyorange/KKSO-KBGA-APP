@@ -121,7 +121,7 @@ if (today.getDate() > 1) {
   fldDate.max = formatDateYMD(maxD);
   fldDate.value = formatDateYMD(today);
 
-  fldFrom.value = 'KKSO';
+  fldFrom.value = 'KKSO (KAVI SUBHASH)';
 
   fldTo.innerHTML = '<option value="">-- Select Station --</option>';
   (typeof TAStations !== 'undefined' ? TAStations : []).forEach(st => {
@@ -311,7 +311,7 @@ function editRow(index) {
   fldObject.value = row.ObjectOfJourney || '';
   fldLeft.value = row.LeftTime || '';
   fldArrived.value = row.ArrivedTime || '';
-  fldFrom.value = 'KKSO';
+  fldFrom.value = 'KKSO (KAVI SUBHASH)';
   fldTo.value = row.To || '';
   fldBookedBy.value = row.BookedBy || '';
 
