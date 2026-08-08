@@ -13,9 +13,8 @@ const displayName = loggedInUser.toUpperCase();
 const lookupKey   = displayName.replace(/\s+/g, '_');
 const employeeData = (typeof TAMapping !== 'undefined' && TAMapping[lookupKey]) || {};
 
-const WORKER_URL = 'https://keyps.powersupplyorange.workers.dev';
+const WORKER_URL = 'https://app.powersupplyorange.workers.dev';
 const SHEET_ID   = '1aa-N2lqaYFv9Al9r4zWeRIbeccCrTuQn-5fqYTysm94';
-const API_KEY    = 'AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI';
 
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 function formatDateDMY(d) { return pad(d.getDate())+'-'+pad(d.getMonth()+1)+'-'+String(d.getFullYear()).slice(-2); }
@@ -111,7 +110,12 @@ function initEntryForm() {
   fldDesignation.value = employeeData.Designation || '';
 
   const today = new Date();
-  const minD = new Date(today); minD.setDate(today.getDate() - 1);
+
+const minD = new Date(today);
+// Only subtract 1 day if today is NOT the 1st day of the month
+if (today.getDate() > 1) {
+  minD.setDate(today.getDate() - 1);
+}
   const maxD = new Date(today); maxD.setDate(today.getDate() + 0);
   fldDate.min = formatDateYMD(minD);
   fldDate.max = formatDateYMD(maxD);
@@ -225,6 +229,7 @@ async function handleSubmit(e) {
   const targetMonth = (typeof getCurrentTAMonth === 'function') ? getCurrentTAMonth() : '';
 
   const payload = {
+    //action: isEditing ? 'update' : 'submit', // Worker ko action pata chalega agar same date and same person ko dubara entry chahiye to cooment ko hata do dono jagah worker me bhi.
     target: targetMonth,
     data: {
       SeriaLNo: '',// add this function to update serial no when posting "isEditing ? editingSerialNo : '',"
@@ -371,7 +376,7 @@ function setStatus(msg, isError) {
 
 async function fetchSheetData(sheetName) {
   const range = `${sheetName}!A:K`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
+  const url = `${WORKER_URL}?sheetId=${SHEET_ID}&range=${encodeURIComponent(range)}`;
   const res = await fetch(url);
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
