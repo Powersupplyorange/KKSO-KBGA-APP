@@ -26,7 +26,14 @@ const subGroupMap = {
     "11":"OVPD", "12":"ETS", "13":"ACDB", "14":"DCDB", "15":"BATTERY CHARGER",
     "16":"NI-CD BATTERY BANK"
   },
-  "02": {}, "03": {}, "04": {}, "05": {}, "06": {}, "07": {}, "08": {}
+  "02": {}, "03": {}, "04": {}, 
+"05":{"01":"FOOT PATROLLING",
+      "02":"HEIGHT & DISTANCE",
+      "03":"EXPANSION JOINT",
+      "04":"ANCHOR ASSEMBLY",
+      "05":"CABLE CONNECTOR"
+     },
+   "06": {}, "07": {}, "08": {}
 };
 /* ============================================================
    EQUPMENT NO
