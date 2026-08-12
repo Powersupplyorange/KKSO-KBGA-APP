@@ -254,6 +254,27 @@ const equipmentMap = {
       "17": "KBST-KBGA_UP",
       "18": "KBST-KBGA_DN",
       "19": "KBGA_UP PT"
+    },
+    "05": {
+      "01": "YARD",
+      "02": "KKSO_DN PF",
+      "03": "KKSO-KSJR_UP LINE",
+      "04": "KKSO-KSJR_DN LINE",
+      "05": "KSJR-KJNN_UP LINE",
+      "06": "KSJR-KJNN_DN LINE",
+      "07": "KJNN-KKSK_UP LINE",
+      "08": "KJNN-KKSK_DN LINE",
+      "09": "KKSK-KHMD_UP LINE",
+      "10": "KKSK-KHMD_DN LINE",
+      "11": "KHMD-KVIB_UP LINE",
+      "12": "KHMD-KVIB_DN LINE",
+      "13": "KVIB-KRWT_UP LINE",
+      "14": "KVIB-KRWT_DN LINE",
+      "15": "KRWT-KBST_UP LINE",
+      "16": "KRWT-KBST_DN LINE",
+      "17": "KBST-KBGA_UP",
+      "18": "KBST-KBGA_DN",
+      "19": "KBGA_UP PT"
     }
   },
   /*-------------------------------------------------------------------------------------------------
