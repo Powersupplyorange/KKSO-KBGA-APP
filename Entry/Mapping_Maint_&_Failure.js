@@ -130,7 +130,7 @@ const equipmentMap = {
       "03": {"01":"JOCKEY-1",
             "02":"JOCKEY-2",
             "03":"HYDRANT"
-            }
+            },
       "04": {"01":"SUMP-1",
             "02":"SUMP-2",
             "03":"SUMP-3",
