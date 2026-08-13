@@ -10,8 +10,6 @@ const loggedInLevel = getUrlParam('level');
 const parentSheet = getUrlParam('sheet');
 
 const WORKER_URL = 'https://keyps.powersupplyorange.workers.dev';
-
-const SHEET_API_KEY   = 'AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI';
 const SPREADSHEET_ID  = '1Jid66wBQ1ktKoysqpoCF1sIKengpsHq8CQKW9euMWh0';
 const SPREADSHEET_NAME= 'Failure_Log';
 
@@ -558,7 +556,7 @@ function resetEntryFormFields() {
 ============================================================ */
 async function fetchFailureLogRows() {
  const range = `${SPREADSHEET_NAME}!A2:I`;
- const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}?key=${SHEET_API_KEY}`;
+ const url = `${WORKER_URL}?sheetId=${SPREADSHEET_ID}&range=${encodeURIComponent(range)}`;
  const res = await fetch(url);
  if (!res.ok) throw new Error('Sheet fetch failed: ' + res.status);
  const data = await res.json();
