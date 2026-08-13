@@ -9,7 +9,7 @@ const loggedInUser = getUrlParam('user');
 const loggedInLevel = getUrlParam('level');
 const parentSheet = getUrlParam('sheet');
 
-const WORKER_URL = 'https://keyps.powersupplyorange.workers.dev';
+const WORKER_URL = 'https://app.powersupplyorange.workers.dev';
 const SPREADSHEET_ID  = '1Jid66wBQ1ktKoysqpoCF1sIKengpsHq8CQKW9euMWh0';
 const SPREADSHEET_NAME= 'Failure_Log';
 
