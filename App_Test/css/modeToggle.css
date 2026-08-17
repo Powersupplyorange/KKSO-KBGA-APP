@@ -1,0 +1,4 @@
+.mode-toggle{display:flex;gap:6px;margin-bottom:8px}
+.mode-btn{flex:1;padding:8px 10px;border:2px solid rgba(255,255,255,0.3);border-radius:10px;background:rgba(255,255,255,0.15);color:white;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.3s;text-align:center}
+.mode-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);border-color:rgba(255,255,255,0.5);box-shadow:0 4px 15px rgba(102,126,234,0.4)}
+.mode-btn:hover{transform:translateY(-1px)}
