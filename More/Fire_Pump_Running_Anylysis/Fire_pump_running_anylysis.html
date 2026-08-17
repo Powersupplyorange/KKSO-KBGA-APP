@@ -460,7 +460,7 @@ td:nth-child(5) {
 <script>
 
 const SHEET_ID="1qSP6WkmhrrWXVGZspl6ttfxK7QTY-4qdFSKvv5nM9tk";
-const API_KEY="AIzaSyAjBceUqA-G1ueMCsqevOiPEhb2Nk-pOhI";
+const WORKER_URL="https://app.powersupplyorange.worker.dev";
 const SHEET="DATA";
 
 let data=[];
@@ -476,7 +476,8 @@ async function loadData(){
     document.getElementById("msg").innerHTML='<div class="loading">Loading data...</div>';
 
     try{
-        let url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET}?key=${API_KEY}`;
+        let Url = `${WORKER_URL}?sheetId=${encodeURIComponent(SHEET_ID)}&range=${encodeURIComponent(SHEET)}`;
+
         let res=await fetch(url);
         let json=await res.json();
 
