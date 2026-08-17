@@ -1,0 +1,22 @@
+.mydata-toggle{display:flex;gap:6px;margin-bottom:10px}
+.mydata-btn{flex:1;padding:8px;border:2px solid var(--card-border);border-radius:10px;background:white;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.3s}
+.mydata-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-color:transparent}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.stat-card{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:10px;padding:6px 4px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.15)}
+.stat-card .stat-icon{font-size:14px}
+.stat-card .stat-num{font-size:18px;font-weight:900}
+.stat-card .stat-label{font-size:7px;opacity:0.9;text-transform:uppercase}
+.personal-card{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:12px;padding:10px;margin-bottom:8px}
+.personal-card h3{font-size:13px;margin-bottom:6px;color:#0369a1}
+.personal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.personal-item{background:white;padding:6px;border-radius:6px;border:1px solid #e0f2fe}
+.personal-item .p-label{font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.personal-item .p-value{font-size:12px;font-weight:600;color:var(--text)}
+
+/* History table (used in My Entries) */
+.history-table{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:12px}
+.history-table thead{position:sticky;top:0;z-index:2}
+.history-table th{background:linear-gradient(180deg,#f8fafc,#eef2ff);color:#ea580c;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;padding:10px 8px;font-size:11px;border:1px solid #e2e8f0;white-space:nowrap}
+.history-table td{background:white;padding:8px;text-align:center;border:1px solid #f1f5f9;word-break:break-word;font-size:13px}
+.history-table tr:hover td{background:#f8fafc}
+.history-scroll{overflow-x:auto;border-radius:12px;border:1px solid var(--card-border);background:white;max-height:400px;overflow-y:auto}
