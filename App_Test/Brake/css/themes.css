@@ -1,0 +1,34 @@
+/* ===== THEME: ADMIN ===== */
+body.theme-admin{background:linear-gradient(135deg,#667eea 0%,#764ba2 25%,#f093fb 50%,#5ee7df 75%,#667eea 100%);background-size:400% 400%;animation:gradientShift 12s ease infinite}
+.theme-admin .user-bar{background:linear-gradient(135deg,#1e1b4b,#312e81,#4c1d95,#6d28d9,#7c3aed);background-size:300% 300%;animation:gradientShift 5s ease infinite}
+.theme-admin .mode-btn.active{background:linear-gradient(135deg,#667eea,#764ba2)}
+.theme-admin .submit-btn{background:linear-gradient(135deg,#667eea,#764ba2)}
+.theme-admin .stat-card{background:linear-gradient(135deg,#667eea,#764ba2)}
+.theme-admin .title-card{background:linear-gradient(135deg,#1a0533,#2d1b69,#1a0533)}
+.theme-admin .user-avatar{background:linear-gradient(135deg,#a78bfa,#7c3aed);border-color:#c4b5fd}
+.theme-admin .user-level{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
+
+/* ===== THEME: SUPERVISOR ===== */
+body.theme-supervisor{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 25%,#3b82f6 50%,#06b6d4 75%,#1e3a8a 100%);background-size:400% 400%;animation:gradientShift 12s ease infinite}
+.theme-supervisor .user-bar{background:linear-gradient(135deg,#0c1445,#1e3a8a,#1e40af,#2563eb);background-size:300% 300%;animation:gradientShift 5s ease infinite}
+.theme-supervisor .mode-btn.active{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.theme-supervisor .submit-btn{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.theme-supervisor .stat-card{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.theme-supervisor .title-card{background:linear-gradient(135deg,#0c1445,#1e3a8a,#0c1445)}
+.theme-supervisor .user-avatar{background:linear-gradient(135deg,#60a5fa,#2563eb);border-color:#93c5fd}
+.theme-supervisor .user-level{background:linear-gradient(135deg,#60a5fa,#2563eb)}
+.theme-supervisor .clock-widget .day{color:#2563eb}
+
+/* ===== THEME: STAFF ===== */
+body.theme-staff{background:linear-gradient(135deg,#064e3b 0%,#065f46 25%,#10b981 50%,#34d399 75%,#064e3b 100%);background-size:400% 400%;animation:gradientShift 12s ease infinite}
+.theme-staff .user-bar{background:linear-gradient(135deg,#022c22,#064e3b,#065f46,#059669);background-size:300% 300%;animation:gradientShift 5s ease infinite}
+.theme-staff .mode-btn.active{background:linear-gradient(135deg,#059669,#047857)}
+.theme-staff .submit-btn{background:linear-gradient(135deg,#059669,#047857)}
+.theme-staff .stat-card{background:linear-gradient(135deg,#059669,#047857)}
+.theme-staff .title-card{background:linear-gradient(135deg,#022c22,#064e3b,#022c22)}
+.theme-staff .user-avatar{background:linear-gradient(135deg,#6ee7b7,#059669);border-color:#a7f3d0}
+.theme-staff .user-level{background:linear-gradient(135deg,#6ee7b7,#059669)}
+.theme-staff .clock-widget .day{color:#059669}
+
+/* 👉 TO ADD A NEW ROLE THEME (e.g. "manager"), copy one block above,
+   rename theme-staff → theme-manager and change the colors */
