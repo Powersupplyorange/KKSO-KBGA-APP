@@ -1,0 +1,11 @@
+:root{--text:#0f172a;--muted:#475569;--card:rgba(255,255,255,0.92);--card-border:#e2e8f0;--shadow:0 10px 30px rgba(2,8,23,0.08);--ring:rgba(79,70,229,0.35);--g1:linear-gradient(135deg,#e0f2fe,#fef3c7);--g2:linear-gradient(135deg,#fce7f3,#cffafe);--g3:linear-gradient(135deg,#e9d5ff,#d1fae5);--g4:linear-gradient(135deg,#f3e8ff,#e0f2fe);--g5:linear-gradient(135deg,#fee2e2,#dbeafe);--g6:linear-gradient(135deg,#ffedd5,#ede9fe)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--text);min-height:100vh;background:linear-gradient(135deg,#667eea 0%,#764ba2 25%,#f093fb 50%,#5ee7df 75%,#667eea 100%);background-size:400% 400%;animation:gradientShift 12s ease infinite}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes rainbowText{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes driveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+.page{max-width:1200px;margin:0 auto;padding:8px 8px 30px;display:none}
