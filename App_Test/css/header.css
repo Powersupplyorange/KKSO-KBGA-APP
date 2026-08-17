@@ -1,0 +1,31 @@
+/* Header strip (logos) */
+.header-strip{padding:4px 8px;width:100%;height:55px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,1);border:1px solid var(--card-border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:6px}
+.h11,.h12,.h13{height:100%;background-repeat:no-repeat;background-size:contain;background-position:center}
+.h11{width:15%;background-image:url("https://raw.githubusercontent.com/Ravikumarmalhotra/KKSO-KBGA-APP/main/App_Test/18star.png")}
+.h12{width:65%;background-image:url("https://raw.githubusercontent.com/Ravikumarmalhotra/KKSO-KBGA-APP/main/App_Test/kmlogo.jpg")}
+.h13{width:20%;background-image:url("https://raw.githubusercontent.com/Ravikumarmalhotra/KKSO-KBGA-APP/main/App_Test/emblem.jpg")}
+
+/* User bar */
+.user-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:4px 6px;border-radius:10px;margin-bottom:6px;background:linear-gradient(135deg,#1e1b4b,#312e81,#4c1d95,#6d28d9,#7c3aed);background-size:300% 300%;animation:gradientShift 5s ease infinite;box-shadow:0 4px 15px rgba(0,0,0,0.2);z-index:100;position:relative}
+.clock-widget{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.95);padding:4px 10px;border-radius:8px;font-size:11px;white-space:nowrap;flex-shrink:0}
+.clock-widget .dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:blink 1.5s infinite}
+.clock-widget .time{font-weight:800;color:#1e293b;font-size:13px}
+.clock-widget .day{color:#7c3aed;font-weight:700;font-size:11px}
+.clock-widget .date{color:var(--muted);font-size:11px}
+.user-info{display:flex;align-items:center;gap:4px;z-index:100;flex-wrap:wrap;flex-shrink:0}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:12px;border:2px solid white;flex-shrink:0}
+.user-details{display:flex;flex-direction:column;flex-shrink:0}
+.user-name{color:white;font-weight:700;font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-level{font-size:8px;padding:1px 6px;border-radius:10px;font-weight:700;color:white;background:linear-gradient(135deg,#f59e0b,#f97316);display:inline-block}
+.logout-btn{padding:6px 12px;background:white;color:#dc2626;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;z-index:100;position:relative;flex-shrink:0}
+.logout-btn:hover{background:#fee2e2}
+.logout-btn:active{transform:scale(0.95)}
+.pwd-btn{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:white;font-size:12px;cursor:pointer;z-index:100;position:relative;flex-shrink:0}
+.refresh-btn{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);border:none;color:white;font-size:12px;cursor:pointer;z-index:100;flex-shrink:0}
+
+/* Title card */
+.title-card{position:relative;width:100%;margin-bottom:8px;border-radius:14px;background:linear-gradient(135deg,#1a0533,#2d1b69,#1a0533);padding:10px 14px;box-shadow:0 8px 25px rgba(0,0,0,0.3);overflow:hidden;text-align:center}
+.title-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(255,255,255,0.08),transparent 60%);pointer-events:none}
+.title-card h1{font-size:18px;font-weight:900;background:linear-gradient(90deg,#fbbf24,#ef4444,#ec4899,#06b6d4,#22c55e,#fbbf24);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbowText 4s ease infinite;margin-bottom:2px}
+.title-card h2{font-size:10px;font-weight:600;background:linear-gradient(90deg,#06b6d4,#22c55e,#84cc16,#fbbf24,#f97316,#06b6d4);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbowText 5s ease infinite;margin-bottom:2px}
+.title-card h3{font-size:8px;font-weight:600;background:linear-gradient(90deg,#ec4899,#ef4444,#f97316,#fbbf24,#ec4899);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbowText 6s ease infinite}
