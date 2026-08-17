@@ -1,0 +1,42 @@
+/* ===== PRINT/PDF ===== */
+@media print{
+  body{background:white!important;animation:none!important}
+  .login-page,.user-bar,.mode-toggle,.header-strip,.mydata-toggle,.inbox-filters,.inbox-card-actions{display:none!important}
+  .page{display:block!important;padding:10px}
+  .panel{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}
+  .title-card{background:#333!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:640px){
+  .mode-toggle{flex-direction:row}
+  .mode-btn{font-size:10px;padding:6px}
+  .user-bar{flex-wrap:wrap;gap:4px;padding:3px 4px}
+  .clock-widget{font-size:9px;padding:3px 6px;gap:3px}
+  .clock-widget .time{font-size:11px}
+  .clock-widget .day,.clock-widget .date{font-size:9px}
+  .user-avatar{width:22px;height:22px;font-size:10px}
+  .user-name{font-size:10px;max-width:60px}
+  .user-level{font-size:7px}
+  .logout-btn{padding:4px 8px;font-size:8px}
+  .pwd-btn,.refresh-btn{width:22px;height:22px;font-size:10px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .inbox-stats{grid-template-columns:repeat(2,1fr)}
+  .personal-grid{grid-template-columns:1fr 1fr}
+  select{font-size:14px;padding:10px 30px 10px 12px}
+  input[type="text"]{font-size:15px;padding:12px 14px}
+  .form-group label{font-size:11px}
+  .output-grid div{min-width:120px;font-size:13px;padding:8px}
+  .output-header{font-size:11px}
+  .more-apps-grid{grid-template-columns:repeat(2,1fr)}
+  .app-embed-topbar{padding:6px 10px}
+  .app-embed-title{font-size:11px}
+  .more-breadcrumb{padding:8px 10px;font-size:11px;gap:4px}
+  .more-folder-card{padding:14px 8px}
+  .more-folder-icon{font-size:34px}
+  .more-folder-name{font-size:12px}
+  .more-app-icon{min-height:44px}
+  .more-app-icon img{width:44px;height:44px}
+  .entry-embed-topbar{padding:6px 10px}
+  .entry-embed-title{font-size:11px}
+}
