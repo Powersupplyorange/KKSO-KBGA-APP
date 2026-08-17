@@ -1,0 +1,34 @@
+.inbox-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.inbox-stat{background:linear-gradient(135deg,#f0f9ff,#dbeafe);border:1px solid #93c5fd;border-radius:10px;padding:8px;text-align:center}
+.inbox-stat .is-num{font-size:20px;font-weight:900;color:#1d4ed8}
+.inbox-stat .is-label{font-size:8px;color:var(--muted);text-transform:uppercase}
+.inbox-filters{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.inbox-filter-btn{padding:6px 12px;border:1px solid var(--card-border);border-radius:8px;background:white;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.inbox-filter-btn.active{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;border-color:transparent}
+.inbox-card{background:white;border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:all 0.2s}
+.inbox-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.inbox-card-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.inbox-badge{padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase}
+.badge-high{background:#fee2e2;color:#dc2626}
+.badge-medium{background:#fef3c7;color:#d97706}
+.badge-low{background:#dcfce7;color:#16a34a}
+.badge-task{background:#dbeafe;color:#2563eb}
+.badge-pdf{background:#fce7f3;color:#db2777}
+.badge-message{background:#e0e7ff;color:#4f46e5}
+.badge-notice{background:#fef9c3;color:#ca8a04}
+.badge-unread{background:#ef4444;color:white}
+.badge-read{background:#e2e8f0;color:#64748b}
+.badge-done{background:#22c55e;color:white}
+.inbox-card-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.inbox-card-msg{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.4}
+.inbox-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.inbox-card-meta{font-size:10px;color:var(--muted)}
+.inbox-card-actions{display:flex;gap:4px;flex-wrap:wrap}
+.inbox-action-btn{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--card-border);background:white;transition:all 0.2s}
+.inbox-action-btn:hover{transform:translateY(-1px)}
+.inbox-action-btn.mark-read{color:#2563eb;border-color:#93c5fd}
+.inbox-action-btn.mark-done{color:#16a34a;border-color:#86efac}
+.inbox-file-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:linear-gradient(135deg,#4285f4,#0d47a1);color:white;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none;transition:all 0.2s}
+.inbox-file-btn:hover{transform:translateY(-1px)}
+.inbox-file-btn.no-access{background:#94a3b8;cursor:not-allowed}
+.unread-badge{background:#ef4444;color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
