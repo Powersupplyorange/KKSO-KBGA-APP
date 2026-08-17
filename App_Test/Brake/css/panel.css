@@ -1,0 +1,23 @@
+.panel{background:var(--card);border:1px solid var(--card-border);border-radius:14px;box-shadow:var(--shadow);padding:12px;margin-bottom:8px;animation:slideUp 0.3s ease}
+.panel-title{font-size:14px;font-weight:700;text-align:center;margin-bottom:10px;color:var(--text)}
+.form-group{margin-bottom:8px}
+.form-group label{display:block;margin-bottom:4px;font-weight:700;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:0.5px}
+.select-wrapper{position:relative}
+.select-wrapper::after{content:"▾";position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#334155;pointer-events:none;font-size:12px}
+select{width:100%;padding:12px 36px 12px 14px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.08);font-size:15px;color:var(--text);background:#fff;appearance:none;-webkit-appearance:none;outline:none;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+select:focus{box-shadow:0 0 0 3px var(--ring)}
+select:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.colorful-select.g1{background:var(--g1)}
+.colorful-select.g2{background:var(--g2)}
+.colorful-select.g3{background:var(--g3)}
+.colorful-select.g4{background:var(--g4)}
+.colorful-select.g5{background:var(--g5)}
+.colorful-select.g6{background:var(--g6)}
+input[type="text"]{width:100%;padding:14px 16px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.08);font-size:16px;outline:none;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+input[type="text"]:focus{box-shadow:0 0 0 3px var(--ring)}
+.btn-group{display:flex;gap:8px;margin-top:12px}
+.submit-btn{flex:1;padding:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,126,234,0.4)}
+.clear-btn{padding:10px 16px;background:linear-gradient(135deg,#64748b,#475569);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s}
+.clear-btn:hover{transform:translateY(-1px)}
+.status-msg{text-align:center;padding:8px;border-radius:8px;font-size:12px;font-weight:600;margin-top:8px}
